@@ -5,10 +5,17 @@ on:
     # 每天晚上23点运行 (UTC+8时区，对应UTC时间15:00)
     - cron: '0 15 * * *'
   workflow_dispatch: # 允许手动触发
+  push:
+    branches: [ main ]  # 推送到main分支时触发
+  pull_request:
+    branches: [ main ]  # PR合并到main分支时触发
+    types: [ closed ]   # 只在PR关闭时触发
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
+    # 确保PR只在合并时运行，而不是简单关闭时运行
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     
     steps:
     - name: Checkout repository
