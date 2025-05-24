@@ -172,3 +172,32 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+release_notes.md
+
+# Test files
+test_lottery_data.json
+
+# Keep generated data files
+# lottery_data.json
+# lottery_frequency_analysis.png
+# analysis_report.md
