@@ -370,7 +370,7 @@ class DoubleColorBallAnalyzer:
             print("无")
     
     def generate_recommendations(self, num_sets=5):
-        """生成推荐号码（基于统计概率的固定推荐）"""
+        """生成推荐号码（基于智能分析的动态推荐）"""
         print(f"\n=== 生成 {num_sets} 组推荐号码 ===")
         
         if not self.lottery_data:
@@ -386,111 +386,209 @@ class DoubleColorBallAnalyzer:
                 red_counter[red] += 1
             blue_counter[record['blue_ball']] += 1
         
-        # 获取红球频率排序（从高到低）
+        # 确保所有红球都有记录（即使频率为0）
+        for i in range(1, 34):
+            if i not in red_counter:
+                red_counter[i] = 0
+                
+        # 确保所有蓝球都有记录
+        for i in range(1, 17):
+            if i not in blue_counter:
+                blue_counter[i] = 0
+        
+        # 获取红球频率排序
         red_freq_sorted = sorted(red_counter.items(), key=lambda x: x[1], reverse=True)
-        # 获取蓝球频率排序（从高到低）
         blue_freq_sorted = sorted(blue_counter.items(), key=lambda x: x[1], reverse=True)
         
-        # 提取高频号码用于组合
-        high_freq_reds = [num for num, count in red_freq_sorted[:18]]  # 前18个高频红球
-        high_freq_blues = [num for num, count in blue_freq_sorted[:8]]   # 前8个高频蓝球
+        # 分层分组：高频、中频、低频
+        total_reds = len(red_freq_sorted)
+        high_cutoff = max(6, total_reds // 3)  # 至少6个高频球
+        mid_cutoff = max(12, 2 * total_reds // 3)  # 至少12个中频球
         
-        print(f"\n高频红球（前18）: {high_freq_reds}")
-        print(f"高频蓝球（前8）: {high_freq_blues}")
+        high_freq_reds = [num for num, _ in red_freq_sorted[:high_cutoff]]
+        mid_freq_reds = [num for num, _ in red_freq_sorted[high_cutoff:mid_cutoff]]
+        low_freq_reds = [num for num, _ in red_freq_sorted[mid_cutoff:]]
+        
+        # 获取高频蓝球
+        high_freq_blues = [num for num, _ in blue_freq_sorted[:8]]
+        
+        print(f"高频红球({len(high_freq_reds)}个): {sorted(high_freq_reds)}")
+        print(f"中频红球({len(mid_freq_reds)}个): {sorted(mid_freq_reds)}")
+        print(f"低频红球({len(low_freq_reds)}个): {sorted(low_freq_reds)}")
+        print(f"高频蓝球: {sorted(high_freq_blues)}")
         
         recommendations = []
         
-        # 生成5组固定的推荐组合
-        recommendation_patterns = [
-            # 第1组：前6个最高频红球 + 最高频蓝球
+        # 定义多种智能选号策略
+        strategies = [
             {
-                'red_indices': [0, 1, 2, 3, 4, 5],
-                'blue_index': 0,
-                'description': '最高频组合'
+                'name': '高频主导',
+                'high': 4, 'mid': 2, 'low': 0,
+                'blue_rank': 0,
+                'description': '基于最高频号码的稳定组合'
             },
-            # 第2组：混合高频球（1,3,5,7,9,11位置的球）
             {
-                'red_indices': [0, 2, 4, 6, 8, 10],
-                'blue_index': 1,
-                'description': '高频均衡组合'
+                'name': '均衡分布', 
+                'high': 3, 'mid': 2, 'low': 1,
+                'blue_rank': 1,
+                'description': '高中低频均衡的平衡组合'
             },
-            # 第3组：另一种混合（2,4,6,8,10,12位置的球）
             {
-                'red_indices': [1, 3, 5, 7, 9, 11],
-                'blue_index': 2,
-                'description': '高频交替组合'
+                'name': '中频优先',
+                'high': 2, 'mid': 3, 'low': 1, 
+                'blue_rank': 2,
+                'description': '中频主导的稳健组合'
             },
-            # 第4组：跨度较大的高频组合
             {
-                'red_indices': [0, 3, 6, 9, 12, 15],
-                'blue_index': 3,
-                'description': '高频跨度组合'
+                'name': '冷热结合',
+                'high': 3, 'mid': 1, 'low': 2,
+                'blue_rank': 3,
+                'description': '热号与冷号结合的对冲组合'
             },
-            # 第5组：平衡型组合
             {
-                'red_indices': [1, 4, 7, 10, 13, 16],
-                'blue_index': 4,
-                'description': '高频平衡组合'
+                'name': '超高频',
+                'high': 5, 'mid': 1, 'low': 0,
+                'blue_rank': 0,
+                'description': '超高频号码的激进组合'
+            },
+            {
+                'name': '低频反选',
+                'high': 1, 'mid': 2, 'low': 3,
+                'blue_rank': 4,
+                'description': '低频号码的反向思维组合'
+            },
+            {
+                'name': '随机均衡',
+                'high': 2, 'mid': 2, 'low': 2,
+                'blue_rank': 2,
+                'description': '各频段随机均衡组合'
+            },
+            {
+                'name': '奇偶优化',
+                'high': 3, 'mid': 2, 'low': 1,
+                'blue_rank': 1,
+                'description': '考虑奇偶平衡的优化组合'
             }
         ]
         
-        for i, pattern in enumerate(recommendation_patterns[:num_sets]):
-            # 选择红球
+        import random
+        random.seed(42)  # 固定种子，确保结果可重现
+        
+        for i, strategy in enumerate(strategies[:num_sets]):
             selected_reds = []
-            for idx in pattern['red_indices']:
-                if idx < len(high_freq_reds):
-                    selected_reds.append(high_freq_reds[idx])
             
-            # 如果红球不足6个，从剩余高频球中补充
-            while len(selected_reds) < 6 and len(selected_reds) < len(high_freq_reds):
-                for red in high_freq_reds:
-                    if red not in selected_reds:
-                        selected_reds.append(red)
-                        if len(selected_reds) == 6:
-                            break
+            # 从各频段选择号码
+            pools = [
+                (high_freq_reds, strategy['high']),
+                (mid_freq_reds, strategy['mid']),
+                (low_freq_reds, strategy['low'])
+            ]
+            
+            for pool, count in pools:
+                if count > 0 and pool:
+                    # 确保不超出池子大小
+                    actual_count = min(count, len(pool))
+                    # 从池子中随机选择（但基于策略偏好）
+                    if len(pool) >= actual_count:
+                        if strategy['name'] == '奇偶优化':
+                            # 特殊处理：优先保证奇偶平衡
+                            selected_from_pool = self._select_with_odd_even_balance(pool, actual_count, selected_reds)
+                        else:
+                            selected_from_pool = random.sample(pool, actual_count)
+                        selected_reds.extend(selected_from_pool)
             
             # 确保有6个红球
-            if len(selected_reds) < 6:
-                # 如果高频球还不够，从所有红球中补充
-                all_reds = list(range(1, 34))
-                for red in all_reds:
-                    if red not in selected_reds:
-                        selected_reds.append(red)
-                        if len(selected_reds) == 6:
-                            break
+            while len(selected_reds) < 6:
+                all_available = set(high_freq_reds + mid_freq_reds + low_freq_reds) - set(selected_reds)
+                if all_available:
+                    selected_reds.append(random.choice(list(all_available)))
+                else:
+                    # 如果所有球都用完了，从1-33中补充
+                    remaining = set(range(1, 34)) - set(selected_reds)
+                    if remaining:
+                        selected_reds.append(random.choice(list(remaining)))
+                    else:
+                        break
             
-            selected_reds = sorted(selected_reds[:6])  # 排序并确保只有6个
+            # 只保留前6个
+            selected_reds = sorted(selected_reds[:6])
             
             # 选择蓝球
-            blue_idx = pattern['blue_index']
-            if blue_idx < len(high_freq_blues):
-                selected_blue = high_freq_blues[blue_idx]
+            blue_rank = strategy['blue_rank']
+            if blue_rank < len(high_freq_blues):
+                selected_blue = high_freq_blues[blue_rank]
             else:
-                selected_blue = high_freq_blues[0]  # 默认选择最高频蓝球
+                selected_blue = high_freq_blues[0] if high_freq_blues else 1
             
-            # 计算这组号码的期望频率
+            # 计算组合特征
+            odd_count = sum(1 for x in selected_reds if x % 2 == 1)
+            even_count = 6 - odd_count
+            total_sum = sum(selected_reds)
+            span = max(selected_reds) - min(selected_reds)
+            
+            # 计算频率得分
             red_total_freq = sum(red_counter.get(red, 0) for red in selected_reds)
             blue_freq = blue_counter.get(selected_blue, 0)
             
             recommendations.append({
                 'red_balls': selected_reds,
                 'blue_ball': selected_blue,
-                'description': pattern['description'],
+                'description': strategy['description'],
+                'strategy': strategy['name'],
+                'odd_even': f"{odd_count}奇{even_count}偶",
+                'sum': total_sum,
+                'span': span,
                 'red_freq_sum': red_total_freq,
-                'blue_freq': blue_freq,
-                'total_freq': red_total_freq + blue_freq
+                'blue_freq': blue_freq
             })
         
-        # 按总频率排序推荐（可选，保持原有顺序也可以）
-        # recommendations.sort(key=lambda x: x['total_freq'], reverse=True)
-        
-        print("\n基于统计概率的固定推荐号码：")
+        print("\n基于智能策略的推荐号码：")
         for i, rec in enumerate(recommendations, 1):
             red_str = " ".join([f"{x:2d}" for x in rec['red_balls']])
-            print(f"推荐 {i}: {red_str} + {rec['blue_ball']:2d} ({rec['description']})")
-            print(f"       频率统计: 红球总频次={rec['red_freq_sum']}, 蓝球频次={rec['blue_freq']}")
+            print(f"推荐 {i}: {red_str} + {rec['blue_ball']:2d}")
+            print(f"       策略: {rec['strategy']} | {rec['odd_even']} | 和值:{rec['sum']} | 跨度:{rec['span']}")
+            print(f"       说明: {rec['description']}")
         
         return recommendations
+    
+    def _select_with_odd_even_balance(self, pool, count, existing_reds):
+        """在选择时考虑奇偶平衡"""
+        if count <= 0:
+            return []
+            
+        existing_odd = sum(1 for x in existing_reds if x % 2 == 1)
+        existing_even = len(existing_reds) - existing_odd
+        
+        # 目标：6个球中3-4个奇数比较平衡
+        target_total_odd = 3 if len(existing_reds) + count <= 6 else 4
+        needed_odd = max(0, target_total_odd - existing_odd)
+        needed_even = count - needed_odd
+        
+        odd_pool = [x for x in pool if x % 2 == 1]
+        even_pool = [x for x in pool if x % 2 == 0]
+        
+        selected = []
+        
+        # 选择奇数
+        import random
+        if needed_odd > 0 and odd_pool:
+            actual_odd = min(needed_odd, len(odd_pool))
+            selected.extend(random.sample(odd_pool, actual_odd))
+        
+        # 选择偶数
+        if needed_even > 0 and even_pool:
+            actual_even = min(needed_even, len(even_pool))
+            selected.extend(random.sample(even_pool, actual_even))
+        
+        # 如果还不够，从剩余的球中补充
+        while len(selected) < count and len(selected) < len(pool):
+            remaining = [x for x in pool if x not in selected]
+            if remaining:
+                selected.append(random.choice(remaining))
+            else:
+                break
+        
+        return selected[:count]
     
     def visualize_frequency(self, save_plots=True):
         """可视化频率分析"""
@@ -696,7 +794,9 @@ class DoubleColorBallAnalyzer:
         
         for i, rec in enumerate(recommendations, 1):
             red_str = " ".join([f"{x:02d}" for x in rec['red_balls']])
-            report_content += f"**推荐组合 {i}**: {red_str} + **{rec['blue_ball']:02d}**\n\n"
+            report_content += f"**推荐组合 {i}** ({rec['strategy']}): {red_str} + **{rec['blue_ball']:02d}**\n"
+            report_content += f"- 特征: {rec['odd_even']} | 和值:{rec['sum']} | 跨度:{rec['span']}\n"
+            report_content += f"- 说明: {rec['description']}\n\n"
         
         # 添加使用说明和提醒
         report_content += f"""---
