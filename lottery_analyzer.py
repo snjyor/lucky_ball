@@ -697,13 +697,13 @@ class DoubleColorBallAnalyzer:
         trends_data = self._get_trends_analysis()
         recommendations = self.generate_recommendations(num_sets=8)
         
-        # 生成报告内容
-        current_time = datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')
+        # 生成报告内容 UTC+8时区
+        current_time = (datetime.now() + timedelta(hours=8)).strftime('%Y年%m月%d日 %H:%M:%S')
         
         report_content = f"""# 🎯 双色球数据分析报告
 
 ## 📊 报告信息
-- **生成时间**: {current_time}
+- **生成时间**: {current_time} (UTC+8)
 - **数据期数**: 共 {len(self.lottery_data)} 期
 - **最新期号**: {self.lottery_data[0]['period'] if self.lottery_data else 'N/A'}
 - **数据来源**: 中国福利彩票官方API
@@ -842,7 +842,7 @@ class DoubleColorBallAnalyzer:
 
 ---
 
-*报告生成时间: {current_time}*  
+*报告生成时间: {current_time} (UTC+8)*  
 *数据来源: 中国福利彩票官方网站*  
 *仅供学习研究使用，请理性购彩*
 """
