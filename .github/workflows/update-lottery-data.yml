@@ -58,7 +58,7 @@ jobs:
         git add lottery_data.json
         git add analysis_report.md
         git add lottery_frequency_analysis.png
-        git commit -m "🎯 更新双色球数据 - $(date +'%Y-%m-%d %H:%M:%S')"
+        git commit -m "🎯 更新双色球数据 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
         git push
         
     - name: Create release on major updates
@@ -66,8 +66,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # 获取当前日期作为tag
-        TAG_NAME="data-$(date +'%Y%m%d')"
+        # 获取当前日期作为tag (使用UTC+8时区)
+        TAG_NAME="data-$(TZ='Asia/Shanghai' date +'%Y%m%d')"
         
         # 检查tag是否已存在
         if ! git tag | grep -q "^$TAG_NAME$"; then
@@ -77,7 +77,7 @@ jobs:
           
           # 创建release notes
           cat > release_notes.md << EOF
-        ## 🎯 双色球数据更新 - $(date +'%Y年%m月%d日')
+        ## 🎯 双色球数据更新 - $(TZ='Asia/Shanghai' date +'%Y年%m月%d日') (UTC+8)
         
         ### 📊 本次更新内容
         - 抓取最新双色球开奖数据
