@@ -1,8 +1,8 @@
-name: Update Lottery Data
+name: 更新彩票数据和分析报告
 
 on:
   schedule:
-    # 每天晚上23点运行 (UTC+8时区，对应UTC时间15:00)
+    # 每天晚上23:00 (UTC+8) 运行，对应 15:00 UTC
     - cron: '0 15 * * *'
   workflow_dispatch: # 允许手动触发
   push:
@@ -12,62 +12,62 @@ on:
     types: [ closed ]   # 只在PR关闭时触发
 
 jobs:
-  update-data:
+  update-lottery-data:
     runs-on: ubuntu-latest
     # 确保PR只在合并时运行，而不是简单关闭时运行
     if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     
     steps:
-    - name: Checkout repository
+    - name: 检出代码
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
       
-    - name: Set up Python
+    - name: 设置Python环境
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
         
-    - name: Cache pip dependencies
+    - name: 缓存pip依赖
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-          
-    - name: Install dependencies
+        
+    - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
         pip install requests pandas numpy matplotlib seaborn beautifulsoup4
         
-    - name: Run lottery data analyzer
+    - name: 运行彩票数据分析
       run: |
-        python lottery_analyzer.py
+        python main.py
         
-    - name: Check for changes
+    - name: 检查文件变更
       id: git-check
       run: |
-        git diff --exit-code lottery_data.json analysis_report.md || echo "changed=true" >> $GITHUB_OUTPUT
+        git diff --exit-code data/ reports/ pics/ || echo "changed=true" >> $GITHUB_OUTPUT
         
-    - name: Commit and push if changed
+    - name: 提交更新
       if: steps.git-check.outputs.changed == 'true'
       run: |
         git config --local user.email "snjyor@gmail.com"
         git config --local user.name "snjyor"
-        git add lottery_data.json
-        git add analysis_report.md
-        git add lottery_frequency_analysis.png
-        git commit -m "🎯 更新双色球数据 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
+        git add data/
+        git add reports/
+        git add pics/
+        git commit -m "🎯 更新彩票数据和分析报告 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
         git push
         
-    - name: Create release on major updates
+    - name: 创建重大更新的发布版本
       if: steps.git-check.outputs.changed == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # 获取当前日期作为tag (使用UTC+8时区)
-        TAG_NAME="data-$(TZ='Asia/Shanghai' date +'%Y%m%d')"
+        TAG_NAME="lottery-data-$(TZ='Asia/Shanghai' date +'%Y%m%d')"
         
         # 检查tag是否已存在
         if ! git tag | grep -q "^$TAG_NAME$"; then
@@ -77,18 +77,24 @@ jobs:
           
           # 创建release notes
           cat > release_notes.md << EOF
-        ## 🎯 双色球数据更新 - $(TZ='Asia/Shanghai' date +'%Y年%m月%d日') (UTC+8)
+        ## 🎯 彩票数据更新 - $(TZ='Asia/Shanghai' date +'%Y年%m月%d日') (UTC+8)
         
         ### 📊 本次更新内容
-        - 抓取最新双色球开奖数据
+        - 抓取最新双色球和大乐透开奖数据
         - 更新统计分析图表
         - 刷新号码频率分析
         - 更新分析报告文档
         
         ### 📁 更新文件
-        - \`lottery_data.json\` - 最新开奖数据
-        - \`analysis_report.md\` - 详细分析报告
-        - \`lottery_frequency_analysis.png\` - 频率分析图表
+        **双色球数据：**
+        - \`data/lottery_data.json\` - 双色球开奖数据
+        - \`reports/analysis_report.md\` - 双色球分析报告
+        - \`pics/lottery_frequency_analysis.png\` - 双色球频率图表
+        
+        **大乐透数据：**
+        - \`data/super_lotto_data.json\` - 大乐透开奖数据
+        - \`reports/super_lotto_analysis_report.md\` - 大乐透分析报告
+        - \`pics/super_lotto_frequency_analysis.png\` - 大乐透频率图表
         
         ### ⚠️ 免责声明
         本数据仅供学习和统计分析使用，彩票开奖完全随机，请理性购彩。
@@ -96,9 +102,20 @@ jobs:
           
           # 使用GitHub CLI创建release
           gh release create $TAG_NAME \
-            --title "数据更新 $TAG_NAME" \
+            --title "彩票数据更新 $TAG_NAME" \
             --notes-file release_notes.md \
-            lottery_data.json \
-            analysis_report.md \
-            lottery_frequency_analysis.png
+            data/lottery_data.json \
+            data/super_lotto_data.json \
+            reports/analysis_report.md \
+            reports/super_lotto_analysis_report.md \
+            pics/lottery_frequency_analysis.png \
+            pics/super_lotto_frequency_analysis.png
+        fi
+        
+    - name: 输出结果
+      run: |
+        if [ "${{ steps.git-check.outputs.changed }}" == "true" ]; then
+          echo "✅ 彩票数据已更新并提交 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
+        else
+          echo "ℹ️ 彩票数据无变化，跳过提交 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
         fi 

@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter, defaultdict
 import warnings
+import os
 warnings.filterwarnings('ignore')
 
 # 设置中文字体支持
@@ -240,13 +241,15 @@ class DoubleColorBallAnalyzer:
         except:
             return 0
     
-    def save_data(self, filename="lottery_data.json"):
+    def save_data(self, filename="data/lottery_data.json"):
         """保存数据到文件"""
+        # 确保目录存在
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(self.lottery_data, f, ensure_ascii=False, indent=2)
         print(f"数据已保存到 {filename}")
     
-    def load_data(self, filename="lottery_data.json"):
+    def load_data(self, filename="data/lottery_data.json"):
         """从文件加载数据"""
         try:
             with open(filename, 'r', encoding='utf-8') as f:
@@ -645,8 +648,10 @@ class DoubleColorBallAnalyzer:
         plt.tight_layout()
         
         if save_plots:
-            plt.savefig('lottery_frequency_analysis.png', dpi=300, bbox_inches='tight')
-            print("频率分析图表已保存为 lottery_frequency_analysis.png")
+            # 确保目录存在
+            os.makedirs('pics', exist_ok=True)
+            plt.savefig('pics/lottery_frequency_analysis.png', dpi=300, bbox_inches='tight')
+            print("频率分析图表已保存为 pics/lottery_frequency_analysis.png")
         
         plt.show()
     
@@ -683,13 +688,16 @@ class DoubleColorBallAnalyzer:
         """
         print(rules)
     
-    def generate_analysis_report(self, filename="analysis_report.md"):
+    def generate_analysis_report(self, filename="reports/analysis_report.md"):
         """生成完整的分析报告文件"""
         print(f"正在生成分析报告: {filename}")
         
         if not self.lottery_data:
             print("无数据，无法生成报告")
             return
+        
+        # 确保目录存在
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         
         # 执行所有分析
         red_counter, blue_counter = self._get_frequency_analysis()

@@ -1,0 +1,117 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 开发指南
+
+## 环境设置
+
+### 依赖安装
+使用 [requirements.txt](mdc:requirements.txt) 安装所需的Python包：
+```bash
+pip install -r requirements.txt
+```
+
+### 项目初始化
+运行 [setup_repo.sh](mdc:setup_repo.sh) 进行项目初始化：
+```bash
+chmod +x setup_repo.sh
+./setup_repo.sh
+```
+
+## 代码规范
+
+### 文件命名
+- 分析器脚本：`*_analyzer.py`
+- 测试脚本：`test_*.py`
+- 配置文件：使用小写和下划线
+
+### 代码结构
+每个分析器都应包含以下核心方法：
+- `get_max_pages()` - 获取数据总页数
+- `fetch_lottery_data()` - 抓取开奖数据
+- `analyze_frequency()` - 频率分析
+- `analyze_patterns()` - 规律分析
+- `analyze_trends()` - 走势分析
+- `generate_recommendations()` - 生成推荐
+- `generate_analysis_report()` - 生成报告
+
+### 时区处理
+所有时间相关的代码都必须使用UTC+8时区：
+```python
+from datetime import datetime, timezone, timedelta
+beijing_tz = timezone(timedelta(hours=8))
+current_time = datetime.now(beijing_tz)
+```
+
+## 测试流程
+
+### 单元测试
+每个分析器都应有对应的测试脚本：
+- 测试数据抓取功能
+- 验证分析算法正确性
+- 检查报告生成功能
+
+### 集成测试
+- 运行完整的数据分析流程
+- 验证GitHub Actions工作流
+- 检查生成文件的完整性
+
+## 数据管理
+
+### 数据文件
+- `*_data.json` - 存储原始开奖数据
+- `*_analysis_report.md` - 分析报告文档
+- `*_frequency_analysis.png` - 频率分析图表
+
+### 数据更新策略
+- 每次运行都抓取最新数据
+- 覆盖现有数据文件
+- 自动检测数据变更
+
+## 部署和维护
+
+### GitHub Actions
+- 工作流文件位于 `.github/workflows/`
+- 支持手动触发和定时执行
+- 自动提交数据更新
+
+### 监控
+- 检查Actions执行状态
+- 监控数据文件大小变化
+- 验证报告生成质量
+
+### 故障排除
+常见问题和解决方案：
+1. **API请求失败**: 检查网络连接和API状态
+2. **数据解析错误**: 验证API响应格式
+3. **图表生成失败**: 检查matplotlib依赖
+4. **时区显示错误**: 确认时区设置正确
+
+## 扩展开发
+
+### 添加新彩票类型
+1. 创建新的分析器脚本
+2. 实现核心分析方法
+3. 添加对应的GitHub Actions工作流
+4. 创建测试脚本验证功能
+
+### 优化分析算法
+- 研究新的统计方法
+- 改进推荐策略
+- 增加可视化图表类型
+- 优化报告格式
+
+## 安全和合规
+
+### 免责声明
+所有代码和文档都必须包含明确的免责声明：
+- 强调彩票的随机性
+- 声明不构成投注建议
+- 提醒理性购彩
+
+### 数据使用
+- 仅使用官方公开API
+- 不存储个人信息
+- 遵守相关法律法规

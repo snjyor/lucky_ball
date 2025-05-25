@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 彩票数据分析项目概览
+
+## 项目简介
+这是一个基于Python的彩票数据分析系统，支持双色球和大乐透两种彩票的数据采集、统计分析和智能推荐。
+
+## ⚠️ 重要免责声明
+- 本项目仅用于技术学习和数据分析研究
+- 彩票开奖完全随机，历史数据无法预测未来
+- 不构成任何投注建议，请理性购彩
+
+## 项目结构
+
+### 核心文件
+- [README.md](mdc:README.md) - 项目主要说明文档
+- [requirements.txt](mdc:requirements.txt) - Python依赖包列表
+- [setup_repo.sh](mdc:setup_repo.sh) - 项目初始化脚本
+- [.gitignore](mdc:.gitignore) - Git忽略文件配置
+
+### 自动化工作流
+- [.github/workflows/update-lottery-data.yml](mdc:.github/workflows/update-lottery-data.yml) - 双色球数据自动更新
+- [.github/workflows/update-super-lotto-data.yml](mdc:.github/workflows/update-super-lotto-data.yml) - 大乐透数据自动更新
+
+### 目录结构
+- `data/` - 存储原始数据文件
+- `reports/` - 存储生成的分析报告
+- `scripts/` - 存储辅助脚本
+- `test/` - 存储测试文件
+- `pics/` - 存储图片和图表文件
+
+## 技术栈
+- **Python 3.9+** - 主要开发语言
+- **pandas, numpy** - 数据处理和分析
+- **matplotlib, seaborn** - 数据可视化
+- **requests** - HTTP请求处理
+- **GitHub Actions** - 自动化CI/CD
+
+## 开发流程
+1. 数据采集：通过官方API获取最新开奖数据
+2. 数据分析：进行频率、规律、走势等统计分析
+3. 智能推荐：基于历史数据生成推荐号码组合
+4. 报告生成：输出Markdown格式的分析报告
+5. 自动化：通过GitHub Actions定时更新数据

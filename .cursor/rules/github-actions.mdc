@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# GitHub Actions 自动化工作流
+
+## 工作流概述
+项目使用GitHub Actions实现数据的自动采集和分析，确保数据始终保持最新状态。
+
+## 双色球工作流
+[.github/workflows/update-lottery-data.yml](mdc:.github/workflows/update-lottery-data.yml) 负责双色球数据的自动更新：
+
+### 触发条件
+- **定时触发**: 每天晚上23:00 (UTC+8) 自动运行
+- **手动触发**: 支持workflow_dispatch手动执行
+- **代码推送**: 推送到main分支时触发
+- **PR合并**: Pull Request合并时触发
+
+### 执行流程
+1. 检出代码并设置Python环境
+2. 安装项目依赖包
+3. 运行双色球分析脚本
+4. 检查数据文件是否有变更
+5. 如有变更，提交更新并创建release
+
+## 大乐透工作流
+[.github/workflows/update-super-lotto-data.yml](mdc:.github/workflows/update-super-lotto-data.yml) 负责大乐透数据的自动更新：
+
+### 关键特性
+- 与双色球工作流结构相同
+- 独立的数据文件和分析报告
+- 相同的时区处理 (UTC+8)
+- 完整的错误处理和日志
+
+### 生成文件
+- `super_lotto_data.json` - 大乐透开奖数据
+- `super_lotto_analysis_report.md` - 分析报告
+- `super_lotto_frequency_analysis.png` - 频率分析图表
+
+## 时区处理
+所有工作流都使用UTC+8时区：
+```yaml
+# 每天晚上23:00 (UTC+8) 运行，对应 15:00 UTC
+- cron: '0 15 * * *'
+```
+
+## 权限配置
+- 使用内置的 `GITHUB_TOKEN`
+- 无需额外配置secrets
+- 自动处理代码提交和release创建
+
+## 监控和调试
+- 查看Actions页面了解执行状态
+- 检查日志排查问题
+- 支持手动触发进行测试
