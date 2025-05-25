@@ -172,7 +172,8 @@ def main():
     
     # 运行分析器（传入统一时间戳）
     lottery_success = run_lottery_analyzer(unified_timestamp)
-    super_lotto_success = run_super_lotto_analyzer(unified_timestamp)
+    # super_lotto_success = run_super_lotto_analyzer(unified_timestamp)
+    super_lotto_success = False
     
     # 总结结果
     end_time = time.time()

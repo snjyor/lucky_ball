@@ -127,7 +127,7 @@ jobs:
         ## 🎯 彩票数据更新 - $(TZ='Asia/Shanghai' date +'%Y年%m月%d日') (UTC+8)
         
         ### 📊 本次更新内容
-        - 抓取最新双色球和大乐透开奖数据
+        - 抓取最新双色球开奖数据
         - 更新统计分析图表
         - 刷新号码频率分析
         - 更新分析报告文档
@@ -139,11 +139,11 @@ jobs:
         - \`reports/analysis_report.md\` - 双色球分析报告
         - \`pics/lottery_frequency_analysis.png\` - 双色球频率图表
         
-        **大乐透数据：**
-        - \`data/super_lotto_data.json\` - 大乐透开奖数据
-        - \`data/super_lotto_aggregated_data.hjson\` - 大乐透聚合分析数据
-        - \`reports/super_lotto_analysis_report.md\` - 大乐透分析报告
-        - \`pics/super_lotto_frequency_analysis.png\` - 大乐透频率图表
+        # **大乐透数据：**（已暂停处理）
+        # - \`data/super_lotto_data.json\` - 大乐透开奖数据
+        # - \`data/super_lotto_aggregated_data.hjson\` - 大乐透聚合分析数据
+        # - \`reports/super_lotto_analysis_report.md\` - 大乐透分析报告
+        # - \`pics/super_lotto_frequency_analysis.png\` - 大乐透频率图表
         
         ### ⚠️ 免责声明
         本数据仅供学习和统计分析使用，彩票开奖完全随机，请理性购彩。
@@ -152,13 +152,13 @@ jobs:
           # 准备要上传的文件列表（只上传存在的文件）
           upload_files=""
           [ -f "data/lottery_data.json" ] && upload_files="$upload_files data/lottery_data.json"
-          [ -f "data/super_lotto_data.json" ] && upload_files="$upload_files data/super_lotto_data.json"
+          # [ -f "data/super_lotto_data.json" ] && upload_files="$upload_files data/super_lotto_data.json"  # 大乐透数据已暂停处理
           [ -f "data/lottery_aggregated_data.hjson" ] && upload_files="$upload_files data/lottery_aggregated_data.hjson"
-          [ -f "data/super_lotto_aggregated_data.hjson" ] && upload_files="$upload_files data/super_lotto_aggregated_data.hjson"
+          # [ -f "data/super_lotto_aggregated_data.hjson" ] && upload_files="$upload_files data/super_lotto_aggregated_data.hjson"  # 大乐透数据已暂停处理
           [ -f "reports/analysis_report.md" ] && upload_files="$upload_files reports/analysis_report.md"
-          [ -f "reports/super_lotto_analysis_report.md" ] && upload_files="$upload_files reports/super_lotto_analysis_report.md"
+          # [ -f "reports/super_lotto_analysis_report.md" ] && upload_files="$upload_files reports/super_lotto_analysis_report.md"  # 大乐透数据已暂停处理
           [ -f "pics/lottery_frequency_analysis.png" ] && upload_files="$upload_files pics/lottery_frequency_analysis.png"
-          [ -f "pics/super_lotto_frequency_analysis.png" ] && upload_files="$upload_files pics/super_lotto_frequency_analysis.png"
+          # [ -f "pics/super_lotto_frequency_analysis.png" ] && upload_files="$upload_files pics/super_lotto_frequency_analysis.png"  # 大乐透数据已暂停处理
           
           # 使用GitHub CLI创建release（只上传存在的文件）
           if [ -n "$upload_files" ]; then
@@ -185,11 +185,11 @@ jobs:
           # 显示更新的文件
           echo "📁 更新的文件:"
           [ -f "data/lottery_data.json" ] && echo "  ✓ 双色球开奖数据"
-          [ -f "data/super_lotto_data.json" ] && echo "  ✓ 大乐透开奖数据"
+          # [ -f "data/super_lotto_data.json" ] && echo "  ✓ 大乐透开奖数据"  # 大乐透数据已暂停处理
           [ -f "reports/analysis_report.md" ] && echo "  ✓ 双色球分析报告"
-          [ -f "reports/super_lotto_analysis_report.md" ] && echo "  ✓ 大乐透分析报告"
+          # [ -f "reports/super_lotto_analysis_report.md" ] && echo "  ✓ 大乐透分析报告"  # 大乐透数据已暂停处理
           [ -f "pics/lottery_frequency_analysis.png" ] && echo "  ✓ 双色球频率图表"
-          [ -f "pics/super_lotto_frequency_analysis.png" ] && echo "  ✓ 大乐透频率图表"
+          # [ -f "pics/super_lotto_frequency_analysis.png" ] && echo "  ✓ 大乐透频率图表"  # 大乐透数据已暂停处理
         else
           echo "ℹ️ 彩票数据无变化，跳过提交 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
         fi 

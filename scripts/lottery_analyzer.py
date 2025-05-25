@@ -114,12 +114,12 @@ class DoubleColorBallAnalyzer:
                 }
                 
                 # 添加随机延时
-                if attempt > 0:
-                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
-                    print(f"⏳ 第 {attempt + 1} 次尝试，等待 {delay:.1f} 秒...")
-                    time.sleep(delay)
-                else:
-                    time.sleep(random.uniform(1, 3))  # 初始随机延时
+                # if attempt > 0:
+                #     delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                #     print(f"⏳ 第 {attempt + 1} 次尝试，等待 {delay:.1f} 秒...")
+                #     time.sleep(delay)
+                # else:
+                #     time.sleep(random.uniform(0, 1))  # 初始随机延时
                 
                 print(f"🌐 正在请求API... (尝试 {attempt + 1}/{max_retries})")
                 response = self.session.get(self.api_url, params=params, timeout=30)
@@ -223,15 +223,15 @@ class DoubleColorBallAnalyzer:
                     }
                     
                     # 计算延时
-                    if retry_count > 0:
-                        # 指数退避延时，加上随机因子
-                        delay = min(base_delay * (2 ** retry_count), 15) + random.uniform(0, 2)
-                        print(f"⏳ 第 {retry_count + 1} 次重试，等待 {delay:.1f} 秒...")
-                        time.sleep(delay)
-                    else:
-                        # 正常延时，避免请求过于频繁
-                        delay = random.uniform(1, 2)  # 1-2秒随机延时
-                        time.sleep(delay)
+                    # if retry_count > 0:
+                    #     # 指数退避延时，加上随机因子
+                    #     delay = min(base_delay * (2 ** retry_count), 15) + random.uniform(0, 2)
+                    #     print(f"⏳ 第 {retry_count + 1} 次重试，等待 {delay:.1f} 秒...")
+                    #     time.sleep(delay)
+                    # else:
+                    #     # 正常延时，避免请求过于频繁
+                    #     delay = random.uniform(1, 2)  # 1-2秒随机延时
+                    #     time.sleep(delay)
                     
                     print(f"🌐 发送请求到API... (页面 {page}, 尝试 {retry_count + 1})")
                     response = self.session.get(self.api_url, params=params, timeout=30)
