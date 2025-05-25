@@ -1,0 +1,777 @@
+{
+  "// 数据文件说明": 双色球彩票数据聚合分析结果，包含频率、规律、走势等统计数据
+  "// 文件用途": 供AI系统理解数据含义并生成相应的数据可视化图表
+  "// 更新频率": 每天自动更新一次，与开奖数据同步
+  metadata:
+  {
+    "// 元数据说明": 包含数据的基本信息和统计概况
+    lottery_type: 双色球
+    lottery_type_en: double_color_ball
+    game_rules: 红球1-33选6个，蓝球1-16选1个
+    generated_time: 2025年05月25日 21:38:21
+    timezone: UTC+8
+    total_periods: 1864
+    latest_period: "2025057"
+    latest_date: 2025-05-22
+    data_source: 中国福利彩票官方API
+  }
+  frequency_analysis:
+  {
+    "// 频率分析说明": 统计每个号码在历史开奖中的出现次数和频率
+    "// 图表建议": 适合绘制柱状图、热力图、频率分布图
+    "// 可视化用途": 展示号码冷热程度，识别高频低频号码
+    red_balls:
+    {
+      "// 红球频率数据": 红球1-33的历史出现统计
+      "// 数据结构": number: 号码, count: 出现次数, frequency: 出现频率(%)
+      data:
+      [
+        {
+          number: 1
+          count: 365
+          frequency: 19.58
+        }
+        {
+          number: 2
+          count: 358
+          frequency: 19.21
+        }
+        {
+          number: 3
+          count: 312
+          frequency: 16.74
+        }
+        {
+          number: 4
+          count: 321
+          frequency: 17.22
+        }
+        {
+          number: 5
+          count: 324
+          frequency: 17.38
+        }
+        {
+          number: 6
+          count: 380
+          frequency: 20.39
+        }
+        {
+          number: 7
+          count: 347
+          frequency: 18.62
+        }
+        {
+          number: 8
+          count: 340
+          frequency: 18.24
+        }
+        {
+          number: 9
+          count: 363
+          frequency: 19.47
+        }
+        {
+          number: 10
+          count: 349
+          frequency: 18.72
+        }
+        {
+          number: 11
+          count: 327
+          frequency: 17.54
+        }
+        {
+          number: 12
+          count: 335
+          frequency: 17.97
+        }
+        {
+          number: 13
+          count: 328
+          frequency: 17.6
+        }
+        {
+          number: 14
+          count: 384
+          frequency: 20.6
+        }
+        {
+          number: 15
+          count: 342
+          frequency: 18.35
+        }
+        {
+          number: 16
+          count: 324
+          frequency: 17.38
+        }
+        {
+          number: 17
+          count: 361
+          frequency: 19.37
+        }
+        {
+          number: 18
+          count: 347
+          frequency: 18.62
+        }
+        {
+          number: 19
+          count: 358
+          frequency: 19.21
+        }
+        {
+          number: 20
+          count: 351
+          frequency: 18.83
+        }
+        {
+          number: 21
+          count: 300
+          frequency: 16.09
+        }
+        {
+          number: 22
+          count: 380
+          frequency: 20.39
+        }
+        {
+          number: 23
+          count: 327
+          frequency: 17.54
+        }
+        {
+          number: 24
+          count: 319
+          frequency: 17.11
+        }
+        {
+          number: 25
+          count: 328
+          frequency: 17.6
+        }
+        {
+          number: 26
+          count: 357
+          frequency: 19.15
+        }
+        {
+          number: 27
+          count: 356
+          frequency: 19.1
+        }
+        {
+          number: 28
+          count: 301
+          frequency: 16.15
+        }
+        {
+          number: 29
+          count: 315
+          frequency: 16.9
+        }
+        {
+          number: 30
+          count: 307
+          frequency: 16.47
+        }
+        {
+          number: 31
+          count: 317
+          frequency: 17.01
+        }
+        {
+          number: 32
+          count: 347
+          frequency: 18.62
+        }
+        {
+          number: 33
+          count: 314
+          frequency: 16.85
+        }
+      ]
+      "// 统计摘要": 频率分析的关键指标
+      summary:
+      {
+        highest_freq_number: 14
+        highest_freq_count: 384
+        lowest_freq_number: 21
+        lowest_freq_count: 300
+        average_frequency: 338.91
+      }
+    }
+    blue_balls:
+    {
+      "// 蓝球频率数据": 蓝球1-16的历史出现统计
+      "// 数据结构": number: 号码, count: 出现次数, frequency: 出现频率(%)
+      data:
+      [
+        {
+          number: 1
+          count: 133
+          frequency: 7.14
+        }
+        {
+          number: 2
+          count: 106
+          frequency: 5.69
+        }
+        {
+          number: 3
+          count: 115
+          frequency: 6.17
+        }
+        {
+          number: 4
+          count: 120
+          frequency: 6.44
+        }
+        {
+          number: 5
+          count: 102
+          frequency: 5.47
+        }
+        {
+          number: 6
+          count: 121
+          frequency: 6.49
+        }
+        {
+          number: 7
+          count: 126
+          frequency: 6.76
+        }
+        {
+          number: 8
+          count: 114
+          frequency: 6.12
+        }
+        {
+          number: 9
+          count: 107
+          frequency: 5.74
+        }
+        {
+          number: 10
+          count: 103
+          frequency: 5.53
+        }
+        {
+          number: 11
+          count: 113
+          frequency: 6.06
+        }
+        {
+          number: 12
+          count: 125
+          frequency: 6.71
+        }
+        {
+          number: 13
+          count: 100
+          frequency: 5.36
+        }
+        {
+          number: 14
+          count: 118
+          frequency: 6.33
+        }
+        {
+          number: 15
+          count: 130
+          frequency: 6.97
+        }
+        {
+          number: 16
+          count: 131
+          frequency: 7.03
+        }
+      ]
+      "// 统计摘要": 蓝球频率分析的关键指标
+      summary:
+      {
+        highest_freq_number: 1
+        highest_freq_count: 133
+        lowest_freq_number: 13
+        lowest_freq_count: 100
+        average_frequency: 116.5
+      }
+    }
+  }
+  pattern_analysis:
+  {
+    "// 规律分析说明": 分析号码的奇偶分布、和值分布、跨度分布等规律
+    "// 图表建议": 适合绘制饼图、堆叠柱状图、分布直方图
+    "// 可视化用途": 展示号码组合的规律性和分布特征
+    odd_even_distribution:
+    {
+      "// 奇偶分布": 红球6个号码中奇数偶数的分布情况
+      "// 图表类型": 饼图或柱状图展示各种奇偶组合的出现频率
+      data:
+      {
+        3奇3偶: 660
+        2奇4偶: 444
+        4奇2偶: 466
+        5奇1偶: 143
+        6奇0偶: 21
+        1奇5偶: 111
+        0奇6偶: 19
+      }
+      total_periods: 1864
+    }
+    sum_distribution:
+    {
+      "// 和值分布": 红球6个号码总和的分布区间统计
+      "// 图表类型": 直方图或折线图展示和值的分布规律
+      "// 分析意义": 帮助识别号码组合的和值趋势
+      data:
+      {
+        90-99: 325
+        80-89: 263
+        110-119: 302
+        100-109: 342
+        40-49: 10
+        140-149: 52
+        120-129: 183
+        60-69: 82
+        50-59: 36
+        70-79: 159
+        130-139: 95
+        170-179: 1
+        150-159: 10
+        30-39: 1
+        20-29: 1
+        160-169: 2
+      }
+      total_periods: 1864
+    }
+    span_distribution:
+    {
+      "// 跨度分布": 红球最大号码与最小号码差值的分布统计
+      "// 图表类型": 柱状图展示不同跨度范围的出现频率
+      "// 分析意义": 反映号码选择的分散程度
+      data:
+      {
+        25-29: 704
+        30-34: 262
+        20-24: 561
+        15-19: 264
+        10-14: 69
+        5-9: 4
+      }
+      total_periods: 1864
+    }
+  }
+  trend_analysis:
+  {
+    "// 走势分析说明": 分析最近期数的号码走势和热号变化
+    "// 图表建议": 适合绘制时间序列图、热力图、趋势线图
+    "// 可视化用途": 展示短期内号码的冷热变化趋势
+    "// 分析周期": 最近10期开奖数据
+    recent_draws:
+    [
+      {
+        period: "2025057"
+        date: 2025-05-22
+        red_balls:
+        [
+          4
+          9
+          15
+          16
+          25
+          30
+        ]
+        blue_ball: 14
+      }
+      {
+        period: "2025056"
+        date: 2025-05-20
+        red_balls:
+        [
+          1
+          2
+          10
+          14
+          28
+          31
+        ]
+        blue_ball: 3
+      }
+      {
+        period: "2025055"
+        date: 2025-05-18
+        red_balls:
+        [
+          2
+          5
+          22
+          27
+          29
+          33
+        ]
+        blue_ball: 12
+      }
+      {
+        period: "2025054"
+        date: 2025-05-15
+        red_balls:
+        [
+          5
+          7
+          10
+          21
+          24
+          27
+        ]
+        blue_ball: 16
+      }
+      {
+        period: "2025053"
+        date: 2025-05-13
+        red_balls:
+        [
+          6
+          9
+          10
+          13
+          30
+          33
+        ]
+        blue_ball: 7
+      }
+      {
+        period: "2025052"
+        date: 2025-05-11
+        red_balls:
+        [
+          6
+          7
+          10
+          17
+          20
+          26
+        ]
+        blue_ball: 9
+      }
+      {
+        period: "2025051"
+        date: 2025-05-08
+        red_balls:
+        [
+          1
+          2
+          3
+          4
+          17
+          22
+        ]
+        blue_ball: 1
+      }
+      {
+        period: "2025050"
+        date: 2025-05-06
+        red_balls:
+        [
+          9
+          12
+          15
+          18
+          22
+          33
+        ]
+        blue_ball: 16
+      }
+      {
+        period: "2025049"
+        date: 2025-05-04
+        red_balls:
+        [
+          3
+          6
+          19
+          27
+          29
+          33
+        ]
+        blue_ball: 11
+      }
+      {
+        period: "2025048"
+        date: 2025-05-01
+        red_balls:
+        [
+          16
+          21
+          22
+          23
+          27
+          31
+        ]
+        blue_ball: 10
+      }
+    ]
+    hot_numbers:
+    {
+      "// 热号定义": 最近10期中出现2次及以上的号码
+      "// 图表类型": 标记图或高亮显示热号在走势图中的位置
+      red_hot_numbers:
+      [
+        1
+        2
+        3
+        4
+        5
+        6
+        7
+        9
+        10
+        15
+        16
+        17
+        21
+        22
+        27
+        29
+        30
+        31
+        33
+      ]
+      blue_hot_numbers:
+      [
+        16
+      ]
+    }
+  }
+  recommendations:
+  {
+    "// 推荐号码说明": 基于历史统计分析生成的8种策略推荐组合
+    "// 图表建议": 表格展示或卡片式布局展示推荐组合
+    "// 重要提醒": 仅供参考，彩票开奖完全随机
+    "// 策略说明": 包含高频主导、均衡分布、冷热结合等多种选号策略
+    strategies:
+    [
+      {
+        strategy_name: 高频主导
+        description: 基于最高频号码的稳定组合
+        red_balls:
+        [
+          9
+          11
+          14
+          20
+          22
+          32
+        ]
+        blue_ball: 1
+        characteristics:
+        {
+          odd_even_ratio: 2奇4偶
+          sum_value: 108
+          span_value: 23
+        }
+      }
+      {
+        strategy_name: 均衡分布
+        description: 高中低频均衡的平衡组合
+        red_balls:
+        [
+          6
+          7
+          22
+          23
+          26
+          33
+        ]
+        blue_ball: 16
+        characteristics:
+        {
+          odd_even_ratio: 3奇3偶
+          sum_value: 117
+          span_value: 27
+        }
+      }
+      {
+        strategy_name: 中频优先
+        description: 中频主导的稳健组合
+        red_balls:
+        [
+          7
+          14
+          20
+          23
+          30
+          32
+        ]
+        blue_ball: 15
+        characteristics:
+        {
+          odd_even_ratio: 2奇4偶
+          sum_value: 126
+          span_value: 25
+        }
+      }
+      {
+        strategy_name: 冷热结合
+        description: 热号与冷号结合的对冲组合
+        red_balls:
+        [
+          14
+          21
+          26
+          27
+          30
+          32
+        ]
+        blue_ball: 7
+        characteristics:
+        {
+          odd_even_ratio: 2奇4偶
+          sum_value: 150
+          span_value: 18
+        }
+      }
+      {
+        strategy_name: 超高频
+        description: 超高频号码的激进组合
+        red_balls:
+        [
+          1
+          2
+          9
+          10
+          19
+          20
+        ]
+        blue_ball: 1
+        characteristics:
+        {
+          odd_even_ratio: 3奇3偶
+          sum_value: 61
+          span_value: 19
+        }
+      }
+      {
+        strategy_name: 低频反选
+        description: 低频号码的反向思维组合
+        red_balls:
+        [
+          4
+          6
+          8
+          12
+          24
+          31
+        ]
+        blue_ball: 12
+        characteristics:
+        {
+          odd_even_ratio: 1奇5偶
+          sum_value: 85
+          span_value: 27
+        }
+      }
+      {
+        strategy_name: 随机均衡
+        description: 各频段随机均衡组合
+        red_balls:
+        [
+          5
+          7
+          12
+          17
+          22
+          29
+        ]
+        blue_ball: 15
+        characteristics:
+        {
+          odd_even_ratio: 4奇2偶
+          sum_value: 92
+          span_value: 24
+        }
+      }
+      {
+        strategy_name: 奇偶优化
+        description: 考虑奇偶平衡的优化组合
+        red_balls:
+        [
+          1
+          8
+          10
+          17
+          27
+          30
+        ]
+        blue_ball: 16
+        characteristics:
+        {
+          odd_even_ratio: 3奇3偶
+          sum_value: 93
+          span_value: 29
+        }
+      }
+    ]
+    strategy_summary:
+    {
+      total_strategies: 8
+      strategy_types:
+      [
+        高频主导
+        均衡分布
+        中频优先
+        冷热结合
+        超高频
+        低频反选
+        随机均衡
+        奇偶优化
+      ]
+    }
+  }
+  visualization_suggestions:
+  {
+    "// 可视化建议": 针对不同数据类型的图表绘制建议
+    frequency_charts:
+    {
+      chart_types:
+      [
+        bar_chart
+        heatmap
+        bubble_chart
+      ]
+      description: 频率数据适合用柱状图展示排名，热力图展示分布，气泡图展示频率大小
+    }
+    pattern_charts:
+    {
+      chart_types:
+      [
+        pie_chart
+        stacked_bar
+        histogram
+      ]
+      description: 规律数据适合用饼图展示比例，堆叠柱状图展示分类，直方图展示分布
+    }
+    trend_charts:
+    {
+      chart_types:
+      [
+        line_chart
+        scatter_plot
+        timeline
+      ]
+      description: 走势数据适合用折线图展示变化，散点图展示分布，时间轴展示历史
+    }
+    recommendation_display:
+    {
+      display_types:
+      [
+        table
+        card_layout
+        grid_view
+      ]
+      description: 推荐数据适合用表格展示详情，卡片布局展示策略，网格视图展示组合
+    }
+  }
+}

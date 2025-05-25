@@ -29,6 +29,7 @@ import seaborn as sns
 from collections import Counter, defaultdict
 import warnings
 import os
+import hjson
 warnings.filterwarnings('ignore')
 
 # 设置中文字体支持
@@ -958,6 +959,263 @@ class DoubleColorBallAnalyzer:
             'hot_reds': hot_reds_str,
             'hot_blues': hot_blues_str
         }
+    
+    def generate_aggregated_data_hjson(self, filename="data/lottery_aggregated_data.hjson"):
+        """生成聚合分析数据的HJSON文件，包含详细注释供AI理解数据用途"""
+        print(f"正在生成聚合数据文件: {filename}")
+        
+        if not self.lottery_data:
+            print("无数据，无法生成聚合数据文件")
+            return
+        
+        # 确保目录存在
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        
+        # 获取所有分析数据
+        red_counter, blue_counter = self._get_frequency_analysis()
+        patterns_data = self._get_patterns_analysis_raw()
+        trends_data = self._get_trends_analysis_raw()
+        recommendations = self.generate_recommendations(num_sets=8)
+        
+        # 生成时间 UTC+8
+        current_time = (datetime.now() + timedelta(hours=8)).strftime('%Y年%m月%d日 %H:%M:%S')
+        
+        # 构建聚合数据结构
+        aggregated_data = {
+            "// 数据文件说明": "双色球彩票数据聚合分析结果，包含频率、规律、走势等统计数据",
+            "// 文件用途": "供AI系统理解数据含义并生成相应的数据可视化图表",
+            "// 更新频率": "每天自动更新一次，与开奖数据同步",
+            
+            "metadata": {
+                "// 元数据说明": "包含数据的基本信息和统计概况",
+                "lottery_type": "双色球",
+                "lottery_type_en": "double_color_ball", 
+                "game_rules": "红球1-33选6个，蓝球1-16选1个",
+                "generated_time": current_time,
+                "timezone": "UTC+8",
+                "total_periods": len(self.lottery_data),
+                "latest_period": self.lottery_data[0]['period'] if self.lottery_data else None,
+                "latest_date": self.lottery_data[0]['date'] if self.lottery_data else None,
+                "data_source": "中国福利彩票官方API"
+            },
+            
+            "frequency_analysis": {
+                "// 频率分析说明": "统计每个号码在历史开奖中的出现次数和频率",
+                "// 图表建议": "适合绘制柱状图、热力图、频率分布图",
+                "// 可视化用途": "展示号码冷热程度，识别高频低频号码",
+                
+                "red_balls": {
+                    "// 红球频率数据": "红球1-33的历史出现统计",
+                    "// 数据结构": "number: 号码, count: 出现次数, frequency: 出现频率(%)",
+                    "data": [
+                        {
+                            "number": num,
+                            "count": red_counter.get(num, 0),
+                            "frequency": round((red_counter.get(num, 0) / len(self.lottery_data)) * 100, 2)
+                        } for num in range(1, 34)
+                    ],
+                    "// 统计摘要": "频率分析的关键指标",
+                    "summary": {
+                        "highest_freq_number": max(red_counter.items(), key=lambda x: x[1])[0] if red_counter else None,
+                        "highest_freq_count": max(red_counter.items(), key=lambda x: x[1])[1] if red_counter else 0,
+                        "lowest_freq_number": min(red_counter.items(), key=lambda x: x[1])[0] if red_counter else None,
+                        "lowest_freq_count": min(red_counter.items(), key=lambda x: x[1])[1] if red_counter else 0,
+                        "average_frequency": round(sum(red_counter.values()) / len(red_counter) if red_counter else 0, 2)
+                    }
+                },
+                
+                "blue_balls": {
+                    "// 蓝球频率数据": "蓝球1-16的历史出现统计", 
+                    "// 数据结构": "number: 号码, count: 出现次数, frequency: 出现频率(%)",
+                    "data": [
+                        {
+                            "number": num,
+                            "count": blue_counter.get(num, 0),
+                            "frequency": round((blue_counter.get(num, 0) / len(self.lottery_data)) * 100, 2)
+                        } for num in range(1, 17)
+                    ],
+                    "// 统计摘要": "蓝球频率分析的关键指标",
+                    "summary": {
+                        "highest_freq_number": max(blue_counter.items(), key=lambda x: x[1])[0] if blue_counter else None,
+                        "highest_freq_count": max(blue_counter.items(), key=lambda x: x[1])[1] if blue_counter else 0,
+                        "lowest_freq_number": min(blue_counter.items(), key=lambda x: x[1])[0] if blue_counter else None,
+                        "lowest_freq_count": min(blue_counter.items(), key=lambda x: x[1])[1] if blue_counter else 0,
+                        "average_frequency": round(sum(blue_counter.values()) / len(blue_counter) if blue_counter else 0, 2)
+                    }
+                }
+            },
+            
+            "pattern_analysis": {
+                "// 规律分析说明": "分析号码的奇偶分布、和值分布、跨度分布等规律",
+                "// 图表建议": "适合绘制饼图、堆叠柱状图、分布直方图",
+                "// 可视化用途": "展示号码组合的规律性和分布特征",
+                
+                "odd_even_distribution": {
+                    "// 奇偶分布": "红球6个号码中奇数偶数的分布情况",
+                    "// 图表类型": "饼图或柱状图展示各种奇偶组合的出现频率",
+                    "data": patterns_data['odd_even_dist'],
+                    "total_periods": len(self.lottery_data)
+                },
+                
+                "sum_distribution": {
+                    "// 和值分布": "红球6个号码总和的分布区间统计",
+                    "// 图表类型": "直方图或折线图展示和值的分布规律",
+                    "// 分析意义": "帮助识别号码组合的和值趋势",
+                    "data": patterns_data['sum_dist'],
+                    "total_periods": len(self.lottery_data)
+                },
+                
+                "span_distribution": {
+                    "// 跨度分布": "红球最大号码与最小号码差值的分布统计",
+                    "// 图表类型": "柱状图展示不同跨度范围的出现频率",
+                    "// 分析意义": "反映号码选择的分散程度",
+                    "data": patterns_data['span_dist'],
+                    "total_periods": len(self.lottery_data)
+                }
+            },
+            
+            "trend_analysis": {
+                "// 走势分析说明": "分析最近期数的号码走势和热号变化",
+                "// 图表建议": "适合绘制时间序列图、热力图、趋势线图",
+                "// 可视化用途": "展示短期内号码的冷热变化趋势",
+                "// 分析周期": "最近10期开奖数据",
+                
+                "recent_draws": trends_data['recent_draws'],
+                "hot_numbers": {
+                    "// 热号定义": "最近10期中出现2次及以上的号码",
+                    "// 图表类型": "标记图或高亮显示热号在走势图中的位置",
+                    "red_hot_numbers": trends_data['hot_reds'],
+                    "blue_hot_numbers": trends_data['hot_blues']
+                }
+            },
+            
+            "recommendations": {
+                "// 推荐号码说明": "基于历史统计分析生成的8种策略推荐组合",
+                "// 图表建议": "表格展示或卡片式布局展示推荐组合",
+                "// 重要提醒": "仅供参考，彩票开奖完全随机",
+                "// 策略说明": "包含高频主导、均衡分布、冷热结合等多种选号策略",
+                
+                "strategies": [
+                    {
+                        "strategy_name": rec['strategy'],
+                        "description": rec['description'],
+                        "red_balls": rec['red_balls'],
+                        "blue_ball": rec['blue_ball'],
+                        "characteristics": {
+                            "odd_even_ratio": rec['odd_even'],
+                            "sum_value": rec['sum'],
+                            "span_value": rec['span']
+                        }
+                    } for rec in recommendations
+                ],
+                
+                "strategy_summary": {
+                    "total_strategies": len(recommendations),
+                    "strategy_types": [rec['strategy'] for rec in recommendations]
+                }
+            },
+            
+            "visualization_suggestions": {
+                "// 可视化建议": "针对不同数据类型的图表绘制建议",
+                
+                "frequency_charts": {
+                    "chart_types": ["bar_chart", "heatmap", "bubble_chart"],
+                    "description": "频率数据适合用柱状图展示排名，热力图展示分布，气泡图展示频率大小"
+                },
+                
+                "pattern_charts": {
+                    "chart_types": ["pie_chart", "stacked_bar", "histogram"],
+                    "description": "规律数据适合用饼图展示比例，堆叠柱状图展示分类，直方图展示分布"
+                },
+                
+                "trend_charts": {
+                    "chart_types": ["line_chart", "scatter_plot", "timeline"],
+                    "description": "走势数据适合用折线图展示变化，散点图展示分布，时间轴展示历史"
+                },
+                
+                "recommendation_display": {
+                    "display_types": ["table", "card_layout", "grid_view"],
+                    "description": "推荐数据适合用表格展示详情，卡片布局展示策略，网格视图展示组合"
+                }
+            }
+        }
+        
+        # 保存HJSON文件
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                hjson.dump(aggregated_data, f, ensure_ascii=False, indent=2)
+            print(f"聚合数据文件已保存到 {filename}")
+        except Exception as e:
+            print(f"保存聚合数据文件失败: {e}")
+    
+    def _get_patterns_analysis_raw(self):
+        """内部方法：获取原始规律分析数据"""
+        odd_even_dist = defaultdict(int)
+        sum_dist = defaultdict(int)
+        span_dist = defaultdict(int)
+        
+        for record in self.lottery_data:
+            red_balls = record['red_balls']
+            
+            # 奇偶分析
+            odd_count = sum(1 for x in red_balls if x % 2 == 1)
+            even_count = 6 - odd_count
+            odd_even_dist[f"{odd_count}奇{even_count}偶"] += 1
+            
+            # 和值分析
+            total_sum = sum(red_balls)
+            sum_range = f"{(total_sum//10)*10}-{(total_sum//10)*10+9}"
+            sum_dist[sum_range] += 1
+            
+            # 跨度分析
+            span = max(red_balls) - min(red_balls)
+            span_range = f"{(span//5)*5}-{(span//5)*5+4}"
+            span_dist[span_range] += 1
+        
+        return {
+            'odd_even_dist': dict(odd_even_dist),
+            'sum_dist': dict(sum_dist),
+            'span_dist': dict(span_dist)
+        }
+    
+    def _get_trends_analysis_raw(self):
+        """内部方法：获取原始趋势分析数据"""
+        if len(self.lottery_data) < 10:
+            return {
+                'recent_draws': [],
+                'hot_reds': [],
+                'hot_blues': []
+            }
+        
+        recent_10 = self.lottery_data[:10]
+        
+        # 最近10期数据
+        recent_draws = []
+        for record in recent_10:
+            recent_draws.append({
+                'period': record['period'],
+                'date': record['date'],
+                'red_balls': record['red_balls'],
+                'blue_ball': record['blue_ball']
+            })
+        
+        # 冷热号分析
+        red_counter = Counter()
+        blue_counter = Counter()
+        
+        for record in recent_10:
+            for red in record['red_balls']:
+                red_counter[red] += 1
+            blue_counter[record['blue_ball']] += 1
+        
+        hot_reds = [num for num, count in red_counter.items() if count >= 2]
+        hot_blues = [num for num, count in blue_counter.items() if count >= 2]
+        
+        return {
+            'recent_draws': recent_draws,
+            'hot_reds': sorted(hot_reds),
+            'hot_blues': sorted(hot_blues)
+        }
 
 def main():
     """主函数"""
@@ -1007,6 +1265,9 @@ def main():
     
     # 生成分析报告
     analyzer.generate_analysis_report()
+    
+    # 生成聚合数据文件
+    analyzer.generate_aggregated_data_hjson()
     
     print("\n" + "=" * 50)
     print("📋 重要提醒：")

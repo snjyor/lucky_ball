@@ -1,0 +1,822 @@
+{
+  "// 数据文件说明": 大乐透彩票数据聚合分析结果，包含频率、规律、走势等统计数据
+  "// 文件用途": 供AI系统理解数据含义并生成相应的数据可视化图表
+  "// 更新频率": 每天自动更新一次，与开奖数据同步
+  metadata:
+  {
+    "// 元数据说明": 包含数据的基本信息和统计概况
+    lottery_type: 大乐透
+    lottery_type_en: super_lotto
+    game_rules: 前区1-35选5个，后区1-12选2个
+    generated_time: 2025年05月25日 13:39:33
+    timezone: UTC+8
+    total_periods: 2725
+    latest_period: "25057"
+    latest_date: 2025-05-24
+    data_source: 国家体彩中心官方API
+  }
+  frequency_analysis:
+  {
+    "// 频率分析说明": 统计每个号码在历史开奖中的出现次数和频率
+    "// 图表建议": 适合绘制柱状图、热力图、频率分布图
+    "// 可视化用途": 展示号码冷热程度，识别高频低频号码
+    front_balls:
+    {
+      "// 前区频率数据": 前区1-35的历史出现统计
+      "// 数据结构": number: 号码, count: 出现次数, frequency: 出现频率(%)
+      data:
+      [
+        {
+          number: 1
+          count: 404
+          frequency: 14.83
+        }
+        {
+          number: 2
+          count: 388
+          frequency: 14.24
+        }
+        {
+          number: 3
+          count: 399
+          frequency: 14.64
+        }
+        {
+          number: 4
+          count: 352
+          frequency: 12.92
+        }
+        {
+          number: 5
+          count: 400
+          frequency: 14.68
+        }
+        {
+          number: 6
+          count: 382
+          frequency: 14.02
+        }
+        {
+          number: 7
+          count: 407
+          frequency: 14.94
+        }
+        {
+          number: 8
+          count: 363
+          frequency: 13.32
+        }
+        {
+          number: 9
+          count: 359
+          frequency: 13.17
+        }
+        {
+          number: 10
+          count: 372
+          frequency: 13.65
+        }
+        {
+          number: 11
+          count: 394
+          frequency: 14.46
+        }
+        {
+          number: 12
+          count: 361
+          frequency: 13.25
+        }
+        {
+          number: 13
+          count: 355
+          frequency: 13.03
+        }
+        {
+          number: 14
+          count: 361
+          frequency: 13.25
+        }
+        {
+          number: 15
+          count: 351
+          frequency: 12.88
+        }
+        {
+          number: 16
+          count: 329
+          frequency: 12.07
+        }
+        {
+          number: 17
+          count: 366
+          frequency: 13.43
+        }
+        {
+          number: 18
+          count: 366
+          frequency: 13.43
+        }
+        {
+          number: 19
+          count: 401
+          frequency: 14.72
+        }
+        {
+          number: 20
+          count: 389
+          frequency: 14.28
+        }
+        {
+          number: 21
+          count: 364
+          frequency: 13.36
+        }
+        {
+          number: 22
+          count: 425
+          frequency: 15.6
+        }
+        {
+          number: 23
+          count: 379
+          frequency: 13.91
+        }
+        {
+          number: 24
+          count: 347
+          frequency: 12.73
+        }
+        {
+          number: 25
+          count: 390
+          frequency: 14.31
+        }
+        {
+          number: 26
+          count: 370
+          frequency: 13.58
+        }
+        {
+          number: 27
+          count: 379
+          frequency: 13.91
+        }
+        {
+          number: 28
+          count: 374
+          frequency: 13.72
+        }
+        {
+          number: 29
+          count: 470
+          frequency: 17.25
+        }
+        {
+          number: 30
+          count: 449
+          frequency: 16.48
+        }
+        {
+          number: 31
+          count: 409
+          frequency: 15.01
+        }
+        {
+          number: 32
+          count: 440
+          frequency: 16.15
+        }
+        {
+          number: 33
+          count: 456
+          frequency: 16.73
+        }
+        {
+          number: 34
+          count: 418
+          frequency: 15.34
+        }
+        {
+          number: 35
+          count: 456
+          frequency: 16.73
+        }
+      ]
+      "// 统计摘要": 前区频率分析的关键指标
+      summary:
+      {
+        highest_freq_number: 29
+        highest_freq_count: 470
+        lowest_freq_number: 16
+        lowest_freq_count: 329
+        average_frequency: 389.29
+      }
+    }
+    back_balls:
+    {
+      "// 后区频率数据": 后区1-12的历史出现统计
+      "// 数据结构": number: 号码, count: 出现次数, frequency: 出现频率(%)
+      data:
+      [
+        {
+          number: 1
+          count: 428
+          frequency: 15.71
+        }
+        {
+          number: 2
+          count: 453
+          frequency: 16.62
+        }
+        {
+          number: 3
+          count: 451
+          frequency: 16.55
+        }
+        {
+          number: 4
+          count: 435
+          frequency: 15.96
+        }
+        {
+          number: 5
+          count: 468
+          frequency: 17.17
+        }
+        {
+          number: 6
+          count: 443
+          frequency: 16.26
+        }
+        {
+          number: 7
+          count: 485
+          frequency: 17.8
+        }
+        {
+          number: 8
+          count: 425
+          frequency: 15.6
+        }
+        {
+          number: 9
+          count: 454
+          frequency: 16.66
+        }
+        {
+          number: 10
+          count: 487
+          frequency: 17.87
+        }
+        {
+          number: 11
+          count: 456
+          frequency: 16.73
+        }
+        {
+          number: 12
+          count: 465
+          frequency: 17.06
+        }
+      ]
+      "// 统计摘要": 后区频率分析的关键指标
+      summary:
+      {
+        highest_freq_number: 10
+        highest_freq_count: 487
+        lowest_freq_number: 8
+        lowest_freq_count: 425
+        average_frequency: 454.17
+      }
+    }
+  }
+  pattern_analysis:
+  {
+    "// 规律分析说明": 分析前区号码的奇偶分布、和值分布、跨度分布等规律
+    "// 图表建议": 适合绘制饼图、堆叠柱状图、分布直方图
+    "// 可视化用途": 展示号码组合的规律性和分布特征
+    "// 分析范围": 仅分析前区5个号码的规律
+    odd_even_distribution:
+    {
+      "// 奇偶分布": 前区5个号码中奇数偶数的分布情况
+      "// 图表类型": 饼图或柱状图展示各种奇偶组合的出现频率
+      data:
+      {
+        3奇2偶: 998
+        2奇3偶: 829
+        1奇4偶: 335
+        4奇1偶: 443
+        5奇0偶: 76
+        0奇5偶: 44
+      }
+      total_periods: 2725
+    }
+    sum_distribution:
+    {
+      "// 和值分布": 前区5个号码总和的分布区间统计
+      "// 图表类型": 直方图或折线图展示和值的分布规律
+      "// 分析意义": 帮助识别号码组合的和值趋势
+      data:
+      {
+        70-79: 337
+        110-119: 316
+        100-109: 376
+        80-89: 464
+        120-129: 178
+        50-59: 148
+        90-99: 478
+        60-69: 222
+        130-139: 92
+        40-49: 57
+        30-39: 16
+        20-29: 1
+        140-149: 32
+        150-159: 4
+        160-169: 4
+      }
+      total_periods: 2725
+    }
+    span_distribution:
+    {
+      "// 跨度分布": 前区最大号码与最小号码差值的分布统计
+      "// 图表类型": 柱状图展示不同跨度范围的出现频率
+      "// 分析意义": 反映号码选择的分散程度
+      data:
+      {
+        20-24: 680
+        25-29: 862
+        15-19: 395
+        30-34: 576
+        10-14: 181
+        5-9: 31
+      }
+      total_periods: 2725
+    }
+  }
+  trend_analysis:
+  {
+    "// 走势分析说明": 分析最近期数的号码走势和热号变化
+    "// 图表建议": 适合绘制时间序列图、热力图、趋势线图
+    "// 可视化用途": 展示短期内号码的冷热变化趋势
+    "// 分析周期": 最近10期开奖数据
+    recent_draws:
+    [
+      {
+        period: "25057"
+        date: 2025-05-24
+        front_balls:
+        [
+          9
+          10
+          11
+          12
+          29
+        ]
+        back_balls:
+        [
+          1
+          10
+        ]
+      }
+      {
+        period: "25056"
+        date: 2025-05-21
+        front_balls:
+        [
+          12
+          15
+          28
+          29
+          32
+        ]
+        back_balls:
+        [
+          8
+          11
+        ]
+      }
+      {
+        period: "25055"
+        date: 2025-05-19
+        front_balls:
+        [
+          8
+          10
+          25
+          29
+          30
+        ]
+        back_balls:
+        [
+          1
+          2
+        ]
+      }
+      {
+        period: "25054"
+        date: 2025-05-17
+        front_balls:
+        [
+          3
+          12
+          16
+          21
+          29
+        ]
+        back_balls:
+        [
+          1
+          2
+        ]
+      }
+      {
+        period: "25053"
+        date: 2025-05-14
+        front_balls:
+        [
+          14
+          23
+          29
+          30
+          33
+        ]
+        back_balls:
+        [
+          6
+          12
+        ]
+      }
+      {
+        period: "25052"
+        date: 2025-05-12
+        front_balls:
+        [
+          2
+          4
+          11
+          29
+          30
+        ]
+        back_balls:
+        [
+          2
+          8
+        ]
+      }
+      {
+        period: "25051"
+        date: 2025-05-10
+        front_balls:
+        [
+          2
+          4
+          13
+          29
+          31
+        ]
+        back_balls:
+        [
+          5
+          12
+        ]
+      }
+      {
+        period: "25050"
+        date: 2025-05-07
+        front_balls:
+        [
+          15
+          18
+          20
+          21
+          34
+        ]
+        back_balls:
+        [
+          4
+          10
+        ]
+      }
+      {
+        period: "25049"
+        date: 2025-05-05
+        front_balls:
+        [
+          9
+          20
+          22
+          29
+          34
+        ]
+        back_balls:
+        [
+          3
+          8
+        ]
+      }
+      {
+        period: "25048"
+        date: 2025-05-03
+        front_balls:
+        [
+          2
+          6
+          17
+          23
+          35
+        ]
+        back_balls:
+        [
+          6
+          11
+        ]
+      }
+    ]
+    hot_numbers:
+    {
+      "// 热号定义": 最近10期中出现2次及以上的号码
+      "// 图表类型": 标记图或高亮显示热号在走势图中的位置
+      front_hot_numbers:
+      [
+        2
+        4
+        9
+        10
+        11
+        12
+        15
+        20
+        21
+        23
+        29
+        30
+        34
+      ]
+      back_hot_numbers:
+      [
+        1
+        2
+        6
+        8
+        10
+        11
+        12
+      ]
+    }
+  }
+  recommendations:
+  {
+    "// 推荐号码说明": 基于历史统计分析生成的8种策略推荐组合
+    "// 图表建议": 表格展示或卡片式布局展示推荐组合
+    "// 重要提醒": 仅供参考，彩票开奖完全随机
+    "// 策略说明": 包含高频主导、均衡分布、冷热结合等多种选号策略
+    strategies:
+    [
+      {
+        strategy_name: 高频主导
+        description: 基于最高频号码的稳定组合
+        front_balls:
+        [
+          19
+          20
+          26
+          29
+          33
+        ]
+        back_balls:
+        [
+          7
+          9
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 3奇2偶
+          sum_value: 127
+          span_value: 14
+        }
+      }
+      {
+        strategy_name: 均衡分布
+        description: 高中低频均衡的平衡组合
+        front_balls:
+        [
+          10
+          17
+          27
+          33
+          35
+        ]
+        back_balls:
+        [
+          4
+          11
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 4奇1偶
+          sum_value: 122
+          span_value: 25
+        }
+      }
+      {
+        strategy_name: 中频优先
+        description: 中频主导的稳健组合
+        front_balls:
+        [
+          3
+          10
+          19
+          25
+          29
+        ]
+        back_balls:
+        [
+          1
+          11
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 4奇1偶
+          sum_value: 86
+          span_value: 26
+        }
+      }
+      {
+        strategy_name: 冷热结合
+        description: 热号与冷号结合的对冲组合
+        front_balls:
+        [
+          7
+          16
+          24
+          25
+          29
+        ]
+        back_balls:
+        [
+          1
+          9
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 3奇2偶
+          sum_value: 101
+          span_value: 22
+        }
+      }
+      {
+        strategy_name: 超高频
+        description: 超高频号码的激进组合
+        front_balls:
+        [
+          5
+          30
+          31
+          32
+          34
+        ]
+        back_balls:
+        [
+          7
+          12
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 2奇3偶
+          sum_value: 132
+          span_value: 29
+        }
+      }
+      {
+        strategy_name: 低频反选
+        description: 低频号码的反向思维组合
+        front_balls:
+        [
+          8
+          11
+          14
+          20
+          22
+        ]
+        back_balls:
+        [
+          2
+          8
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 1奇4偶
+          sum_value: 75
+          span_value: 14
+        }
+      }
+      {
+        strategy_name: 随机均衡
+        description: 各频段随机均衡组合
+        front_balls:
+        [
+          2
+          15
+          26
+          33
+          34
+        ]
+        back_balls:
+        [
+          2
+          5
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 2奇3偶
+          sum_value: 110
+          span_value: 32
+        }
+      }
+      {
+        strategy_name: 奇偶优化
+        description: 考虑奇偶平衡的优化组合
+        front_balls:
+        [
+          1
+          5
+          18
+          28
+          31
+        ]
+        back_balls:
+        [
+          6
+          11
+        ]
+        characteristics:
+        {
+          odd_even_ratio: 3奇2偶
+          sum_value: 83
+          span_value: 30
+        }
+      }
+    ]
+    strategy_summary:
+    {
+      total_strategies: 8
+      strategy_types:
+      [
+        高频主导
+        均衡分布
+        中频优先
+        冷热结合
+        超高频
+        低频反选
+        随机均衡
+        奇偶优化
+      ]
+    }
+  }
+  visualization_suggestions:
+  {
+    "// 可视化建议": 针对不同数据类型的图表绘制建议
+    frequency_charts:
+    {
+      chart_types:
+      [
+        bar_chart
+        heatmap
+        bubble_chart
+      ]
+      description: 频率数据适合用柱状图展示排名，热力图展示分布，气泡图展示频率大小
+      special_note: 前区和后区需要分别绘制，因为号码范围不同
+    }
+    pattern_charts:
+    {
+      chart_types:
+      [
+        pie_chart
+        stacked_bar
+        histogram
+      ]
+      description: 规律数据适合用饼图展示比例，堆叠柱状图展示分类，直方图展示分布
+    }
+    trend_charts:
+    {
+      chart_types:
+      [
+        line_chart
+        scatter_plot
+        timeline
+      ]
+      description: 走势数据适合用折线图展示变化，散点图展示分布，时间轴展示历史
+    }
+    recommendation_display:
+    {
+      display_types:
+      [
+        table
+        card_layout
+        grid_view
+      ]
+      description: 推荐数据适合用表格展示详情，卡片布局展示策略，网格视图展示组合
+      layout_note: 前区5个号码和后区2个号码需要分开显示
+    }
+  }
+}

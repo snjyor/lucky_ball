@@ -39,7 +39,7 @@ jobs:
     - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
-        pip install requests pandas numpy matplotlib seaborn beautifulsoup4
+        pip install requests pandas numpy matplotlib seaborn beautifulsoup4 hjson
         
     - name: 运行彩票数据分析
       run: |
@@ -88,11 +88,13 @@ jobs:
         ### 📁 更新文件
         **双色球数据：**
         - \`data/lottery_data.json\` - 双色球开奖数据
+        - \`data/lottery_aggregated_data.hjson\` - 双色球聚合分析数据
         - \`reports/analysis_report.md\` - 双色球分析报告
         - \`pics/lottery_frequency_analysis.png\` - 双色球频率图表
         
         **大乐透数据：**
         - \`data/super_lotto_data.json\` - 大乐透开奖数据
+        - \`data/super_lotto_aggregated_data.hjson\` - 大乐透聚合分析数据
         - \`reports/super_lotto_analysis_report.md\` - 大乐透分析报告
         - \`pics/super_lotto_frequency_analysis.png\` - 大乐透频率图表
         
@@ -106,6 +108,8 @@ jobs:
             --notes-file release_notes.md \
             data/lottery_data.json \
             data/super_lotto_data.json \
+            data/lottery_aggregated_data.hjson \
+            data/super_lotto_aggregated_data.hjson \
             reports/analysis_report.md \
             reports/super_lotto_analysis_report.md \
             pics/lottery_frequency_analysis.png \

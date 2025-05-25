@@ -85,6 +85,9 @@ def run_lottery_analyzer():
         
         analyzer.generate_analysis_report()
         
+        # 生成聚合数据文件
+        analyzer.generate_aggregated_data_hjson()
+        
         print("✅ 双色球分析完成！")
         return True
         
@@ -123,6 +126,9 @@ def run_super_lotto_analyzer():
             print(f"⚠️  大乐透图表生成失败: {e}")
         
         analyzer.generate_analysis_report()
+        
+        # 生成聚合数据文件
+        analyzer.generate_aggregated_data_hjson()
         
         print("✅ 大乐透分析完成！")
         return True
@@ -166,6 +172,8 @@ def main():
         print("\n📁 生成的文件:")
         print("• data/lottery_data.json - 双色球开奖数据")
         print("• data/super_lotto_data.json - 大乐透开奖数据")
+        print("• data/lottery_aggregated_data.hjson - 双色球聚合分析数据")
+        print("• data/super_lotto_aggregated_data.hjson - 大乐透聚合分析数据")
         print("• reports/analysis_report.md - 双色球分析报告")
         print("• reports/super_lotto_analysis_report.md - 大乐透分析报告")
         print("• pics/lottery_frequency_analysis.png - 双色球频率图表")
