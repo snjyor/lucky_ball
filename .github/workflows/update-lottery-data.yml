@@ -39,7 +39,21 @@ jobs:
     - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
-        pip install requests pandas numpy matplotlib seaborn beautifulsoup4 hjson
+        pip install requests pandas numpy matplotlib seaborn beautifulsoup4 hjson DrissionPage
+        
+        # 安装Chrome浏览器（DrissionPage需要）
+        echo "安装Chrome浏览器..."
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+        # 验证Chrome安装
+        google-chrome --version
+        
+        # 设置显示环境变量（无头模式）
+        export DISPLAY=:99
+        echo "Chrome浏览器安装完成"
         
     - name: 运行彩票数据分析
       run: |

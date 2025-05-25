@@ -107,6 +107,12 @@ def run_super_lotto_analyzer(unified_timestamp=None):
     try:
         analyzer = SuperLottoAnalyzer()
         
+        # 显示使用的模式
+        if hasattr(analyzer, 'use_drissionpage') and analyzer.use_drissionpage:
+            print("🚀 将使用DrissionPage浏览器模式获取数据（可绕过567错误）")
+        else:
+            print("🔄 将使用传统requests模式获取数据")
+        
         # 获取最大页数并抓取数据
         max_pages = analyzer.get_max_pages()
         analyzer.fetch_lottery_data(max_pages=max_pages)
@@ -134,13 +140,18 @@ def run_super_lotto_analyzer(unified_timestamp=None):
         analyzer.generate_aggregated_data_hjson()
         
         # 更新README中的推荐号码（使用统一时间戳）
-        analyzer.update_readme_recommendations(timestamp=unified_timestamp)
+        if unified_timestamp:
+            analyzer.update_readme_recommendations(timestamp=unified_timestamp)
+        else:
+            analyzer.update_readme_recommendations()
         
-        print("✅ 大乐透分析完成！")
+        print("✅ 大乐透分析完成")
         return True
         
     except Exception as e:
-        print(f"❌ 大乐透分析出错: {e}")
+        print(f"❌ 大乐透分析过程出错: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def main():

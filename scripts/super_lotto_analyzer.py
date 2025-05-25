@@ -30,6 +30,16 @@ import warnings
 import os
 import hjson
 import random
+
+# 添加DrissionPage导入
+try:
+    from DrissionPage import Chromium, ChromiumOptions
+    DRISSIONPAGE_AVAILABLE = True
+    print("✅ DrissionPage 可用，将使用浏览器模式获取数据")
+except ImportError:
+    DRISSIONPAGE_AVAILABLE = False
+    print("⚠️  DrissionPage 不可用，将使用传统requests模式")
+
 warnings.filterwarnings('ignore')
 
 # 设置中文字体支持
@@ -56,6 +66,11 @@ class SuperLottoAnalyzer:
         self.lottery_data = []
         # 设置UTC+8时区
         self.utc8_tz = timezone(timedelta(hours=8))
+        
+        # DrissionPage相关初始化
+        self.browser = None
+        self.tab = None
+        self.use_drissionpage = DRISSIONPAGE_AVAILABLE
         
         # 配置session
         self._setup_session()
@@ -211,8 +226,27 @@ class SuperLottoAnalyzer:
         return 100
     
     def fetch_lottery_data(self, max_pages=None):
-        """抓取大乐透数据，增强错误处理"""
+        """抓取大乐透数据，优先使用DrissionPage，失败时回退到requests"""
         print("🎯 开始抓取大乐透数据...")
+        
+        # 优先尝试DrissionPage模式
+        if self.use_drissionpage:
+            print("🚀 尝试使用DrissionPage模式...")
+            success = self.fetch_lottery_data_with_drissionpage(max_pages)
+            if success:
+                print("✅ DrissionPage模式成功获取数据")
+                return True
+            else:
+                print("⚠️  DrissionPage模式失败，回退到requests模式")
+                self.use_drissionpage = False
+        
+        # 回退到原有的requests模式
+        print("🔄 使用传统requests模式...")
+        return self.fetch_lottery_data_with_requests(max_pages)
+    
+    def fetch_lottery_data_with_requests(self, max_pages=None):
+        """使用requests抓取大乐透数据（原有方法重命名）"""
+        print("🎯 使用requests模式抓取大乐透数据...")
         
         if max_pages is None:
             max_pages = self.get_max_pages()
@@ -402,7 +436,7 @@ class SuperLottoAnalyzer:
                     print(f"⚠️  连续失败 {consecutive_failures} 页，提前结束抓取")
                     break
         
-        print(f"\n📊 数据抓取完成:")
+        print(f"\n📊 requests数据抓取完成:")
         print(f"✅ 成功获取 {len(all_data)} 条记录")
         if failed_pages:
             print(f"❌ 失败页面: {failed_pages[:10]}{'...' if len(failed_pages) > 10 else ''} (共{len(failed_pages)}页)")
@@ -913,7 +947,7 @@ class SuperLottoAnalyzer:
 - **数据来源**: 国家体彩中心官方API
 
 ## ⚠️ 重要免责声明
-**本分析报告仅供学习和研究使用，彩票开奖完全随机，历史数据无法预测未来结果。请理性购彩，量力而行！**
+**本分析报告仅供学习和研究使用，彩票开奖完全随机，历史数据无法预测未来。请理性购彩，量力而行！**
 
 ---
 
@@ -1517,6 +1551,309 @@ class SuperLottoAnalyzer:
             
         except Exception as e:
             print(f"更新README大乐透推荐号码失败: {e}")
+    
+    def _setup_drissionpage(self):
+        """初始化DrissionPage浏览器"""
+        if not DRISSIONPAGE_AVAILABLE:
+            return False
+            
+        try:
+            # 配置浏览器选项
+            options = ChromiumOptions()
+            options.headless(True)  # 无头模式，适合服务器环境
+            options.set_argument('--no-sandbox')
+            options.set_argument('--disable-dev-shm-usage')
+            options.set_argument('--disable-gpu')
+            options.set_argument('--disable-web-security')
+            options.set_argument('--disable-features=VizDisplayCompositor')
+            options.set_argument('--disable-extensions')
+            options.set_argument('--disable-plugins')
+            options.set_argument('--disable-images')  # 禁用图片加载，提高速度
+            options.set_argument('--disable-javascript')  # 对于API请求，可以禁用JS
+            
+            # 设置用户代理
+            user_agent = random.choice(self.user_agents)
+            options.set_user_agent(user_agent)
+            
+            print(f"🚀 正在启动浏览器... (User-Agent: {user_agent[:50]}...)")
+            
+            # 创建浏览器实例
+            self.browser = Chromium(options)
+            self.tab = self.browser.latest_tab
+            
+            print("✅ 浏览器启动成功")
+            return True
+            
+        except Exception as e:
+            print(f"❌ 浏览器启动失败: {e}")
+            self.use_drissionpage = False
+            return False
+    
+    def _close_drissionpage(self):
+        """关闭DrissionPage浏览器"""
+        try:
+            if self.browser:
+                self.browser.quit()
+                print("🔒 浏览器已关闭")
+        except Exception as e:
+            print(f"⚠️  关闭浏览器时出错: {e}")
+    
+    def fetch_lottery_data_with_drissionpage(self, max_pages=None):
+        """使用DrissionPage获取大乐透数据"""
+        print("🎯 使用DrissionPage模式抓取大乐透数据...")
+        
+        if not self._setup_drissionpage():
+            print("❌ DrissionPage初始化失败，回退到requests模式")
+            return self.fetch_lottery_data(max_pages)
+        
+        try:
+            if max_pages is None:
+                max_pages = self.get_max_pages_with_drissionpage()
+            
+            print(f"📄 计划抓取 {max_pages} 页数据")
+            
+            all_data = []
+            failed_pages = []
+            
+            for page in range(1, max_pages + 1):
+                print(f"\n📖 正在抓取第 {page}/{max_pages} 页...")
+                
+                try:
+                    # 构建API URL
+                    params = {
+                        'gameNo': '85',
+                        'provinceId': '0',
+                        'pageSize': '30',
+                        'isVerify': '1',
+                        'pageNo': str(page)
+                    }
+                    
+                    # 构建完整URL
+                    url_params = '&'.join([f"{k}={v}" for k, v in params.items()])
+                    full_url = f"{self.base_url}?{url_params}"
+                    
+                    print(f"🌐 访问URL: {full_url}")
+                    
+                    # 使用浏览器访问API
+                    self.tab.get(full_url, retry=3, interval=2, timeout=30)
+                    
+                    # 等待页面加载
+                    self.tab.wait.load_start()
+                    time.sleep(random.uniform(2, 4))
+                    
+                    # 获取页面内容
+                    page_content = self.tab.html
+                    
+                    # 尝试从页面中提取JSON数据
+                    json_data = None
+                    
+                    # 方法1: 查找<pre>标签中的JSON
+                    pre_element = self.tab.ele('tag:pre')
+                    if pre_element:
+                        json_text = pre_element.text
+                        try:
+                            json_data = json.loads(json_text)
+                        except:
+                            pass
+                    
+                    # 方法2: 直接从页面源码中提取JSON
+                    if not json_data:
+                        # 查找JSON格式的数据
+                        json_pattern = r'\{.*"isSuccess".*\}'
+                        matches = re.findall(json_pattern, page_content, re.DOTALL)
+                        if matches:
+                            try:
+                                json_data = json.loads(matches[0])
+                            except:
+                                pass
+                    
+                    # 方法3: 执行JavaScript获取数据
+                    if not json_data:
+                        try:
+                            # 执行JavaScript来获取响应数据
+                            js_code = """
+                            return fetch(arguments[0])
+                                .then(response => response.json())
+                                .then(data => data)
+                                .catch(error => null);
+                            """
+                            json_data = self.tab.run_js(js_code, full_url)
+                        except:
+                            pass
+                    
+                    if not json_data:
+                        print(f"❌ 第{page}页无法获取JSON数据")
+                        failed_pages.append(page)
+                        continue
+                    
+                    # 检查API响应
+                    if not json_data.get('isSuccess', False):
+                        error_msg = json_data.get('errorMessage', '未知错误')
+                        if error_msg == '处理成功':
+                            print("✅ API返回'处理成功'，继续处理")
+                        else:
+                            print(f"❌ 第{page}页API错误: {error_msg}")
+                            failed_pages.append(page)
+                            continue
+                    
+                    # 处理数据
+                    value = json_data.get('value', {})
+                    page_data = value.get('list', [])
+                    
+                    if not page_data:
+                        print(f"⚠️  第{page}页无数据")
+                        failed_pages.append(page)
+                        continue
+                    
+                    # 解析并存储数据
+                    parsed_count = 0
+                    for item in page_data:
+                        try:
+                            # 解析期号
+                            period = item.get('lotteryDrawNum', '')
+                            
+                            # 解析开奖时间
+                            draw_time = item.get('lotteryDrawTime', '')
+                            date_match = re.search(r'(\d{4}-\d{2}-\d{2})', draw_time)
+                            if not date_match:
+                                continue
+                            draw_date = date_match.group(1)
+                            
+                            # 解析开奖号码
+                            draw_result = item.get('lotteryDrawResult', '')
+                            if not draw_result:
+                                continue
+                            
+                            numbers = draw_result.split(' ')
+                            if len(numbers) < 7:
+                                continue
+                            
+                            front_balls = [int(x) for x in numbers[:5]]
+                            back_balls = [int(x) for x in numbers[5:7]]
+                            
+                            # 解析奖级信息
+                            prize_list = item.get('prizeLevelList', [])
+                            first_prize_count = 0
+                            first_prize_amount = 0
+                            second_prize_count = 0
+                            second_prize_amount = 0
+                            
+                            for prize in prize_list:
+                                if prize.get('awardLevel') == '一等奖':
+                                    first_prize_count = prize.get('awardLevelNum', 0)
+                                    first_prize_amount = prize.get('awardMoney', 0)
+                                elif prize.get('awardLevel') == '二等奖':
+                                    second_prize_count = prize.get('awardLevelNum', 0)
+                                    second_prize_amount = prize.get('awardMoney', 0)
+                            
+                            # 解析其他信息
+                            sales_amount = item.get('drawMoney', 0)
+                            pool_amount = item.get('poolBalanceAfterdraw', 0)
+                            
+                            # 存储数据
+                            lottery_record = {
+                                'period': period,
+                                'date': draw_date,
+                                'front_balls': front_balls,
+                                'back_balls': back_balls,
+                                'first_prize_count': first_prize_count,
+                                'first_prize_amount': first_prize_amount,
+                                'second_prize_count': second_prize_count,
+                                'second_prize_amount': second_prize_amount,
+                                'sales_amount': sales_amount,
+                                'pool_amount': pool_amount
+                            }
+                            
+                            all_data.append(lottery_record)
+                            parsed_count += 1
+                            
+                        except Exception as e:
+                            print(f"⚠️  解析记录时出错: {e}")
+                            continue
+                    
+                    print(f"✅ 第{page}页成功，解析 {parsed_count} 条有效记录")
+                    
+                    # 页面间延时
+                    time.sleep(random.uniform(3, 6))
+                    
+                except Exception as e:
+                    print(f"❌ 第{page}页出错: {e}")
+                    failed_pages.append(page)
+                    continue
+            
+            print(f"\n📊 DrissionPage数据抓取完成:")
+            print(f"✅ 成功获取 {len(all_data)} 条记录")
+            if failed_pages:
+                print(f"❌ 失败页面: {failed_pages[:10]}{'...' if len(failed_pages) > 10 else ''} (共{len(failed_pages)}页)")
+            
+            self.lottery_data = all_data
+            return len(all_data) > 0
+            
+        except Exception as e:
+            print(f"❌ DrissionPage抓取过程出错: {e}")
+            return False
+        finally:
+            self._close_drissionpage()
+    
+    def get_max_pages_with_drissionpage(self):
+        """使用DrissionPage获取总页数"""
+        print("正在使用DrissionPage获取总页数...")
+        
+        try:
+            params = {
+                'gameNo': '85',
+                'provinceId': '0',
+                'pageSize': '30',
+                'isVerify': '1',
+                'pageNo': '1'
+            }
+            
+            url_params = '&'.join([f"{k}={v}" for k, v in params.items()])
+            full_url = f"{self.base_url}?{url_params}"
+            
+            print(f"🌐 访问URL: {full_url}")
+            
+            # 使用浏览器访问API
+            self.tab.get(full_url, retry=3, interval=2, timeout=30)
+            self.tab.wait.load_start()
+            time.sleep(3)
+            
+            # 获取JSON数据
+            json_data = None
+            
+            # 尝试多种方法获取数据
+            pre_element = self.tab.ele('tag:pre')
+            if pre_element:
+                json_text = pre_element.text
+                try:
+                    json_data = json.loads(json_text)
+                except:
+                    pass
+            
+            if not json_data:
+                page_content = self.tab.html
+                json_pattern = r'\{.*"isSuccess".*\}'
+                matches = re.findall(json_pattern, page_content, re.DOTALL)
+                if matches:
+                    try:
+                        json_data = json.loads(matches[0])
+                    except:
+                        pass
+            
+            if json_data:
+                value = json_data.get('value', {})
+                total_pages = value.get('pages', 100)
+                total_records = value.get('total', 0)
+                
+                print(f"✅ 成功获取页数信息: 总记录 {total_records} 条，共 {total_pages} 页")
+                return total_pages
+            else:
+                print("⚠️  无法获取页数信息，使用默认值")
+                return 100
+                
+        except Exception as e:
+            print(f"❌ 获取总页数时出错: {e}")
+            return 100
 
 def main():
     """主函数"""

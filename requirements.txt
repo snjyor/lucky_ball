@@ -4,4 +4,5 @@ numpy>=1.24.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
 beautifulsoup4>=4.12.0
-hjson>=3.1.0 
+hjson>=3.1.0
+DrissionPage>=4.0.0 
