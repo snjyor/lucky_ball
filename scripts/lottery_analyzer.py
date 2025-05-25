@@ -653,8 +653,6 @@ class DoubleColorBallAnalyzer:
             os.makedirs('pics', exist_ok=True)
             plt.savefig('pics/lottery_frequency_analysis.png', dpi=300, bbox_inches='tight')
             print("频率分析图表已保存为 pics/lottery_frequency_analysis.png")
-        
-        plt.show()
     
     def get_lottery_rules(self):
         """获取双色球游戏规则"""
@@ -1216,6 +1214,89 @@ class DoubleColorBallAnalyzer:
             'hot_reds': sorted(hot_reds),
             'hot_blues': sorted(hot_blues)
         }
+    
+    def update_readme_recommendations(self, readme_path="README.md"):
+        """更新README.md中的推荐号码"""
+        print(f"正在更新README.md中的双色球推荐号码...")
+        
+        if not self.lottery_data:
+            print("无数据，无法更新README推荐号码")
+            return
+        
+        try:
+            # 生成推荐号码
+            recommendations = self.generate_recommendations(num_sets=5)
+            
+            # 读取现有README内容
+            with open(readme_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # 生成时间 UTC+8
+            current_time = (datetime.now() + timedelta(hours=8)).strftime('%Y年%m月%d日 %H:%M:%S')
+            
+            # 构建推荐号码内容
+            recommendations_content = f"""## 🎯 今日推荐号码
+
+**⚠️ 以下推荐号码基于历史统计分析，仅供参考，不保证中奖！**
+
+### 双色球推荐 (更新时间: {current_time})
+
+"""
+            
+            for i, rec in enumerate(recommendations, 1):
+                red_str = " ".join([f"{x:02d}" for x in rec['red_balls']])
+                recommendations_content += f"**推荐 {i}** ({rec['strategy']}): `{red_str}` + `{rec['blue_ball']:02d}`  \n"
+                recommendations_content += f"*{rec['description']} | {rec['odd_even']} | 和值:{rec['sum']} | 跨度:{rec['span']}*\n\n"
+            
+            # 查找第二个H2标题的位置（免责声明后）
+            lines = content.split('\n')
+            h2_count = 0
+            insert_index = -1
+            
+            for i, line in enumerate(lines):
+                if line.startswith('## '):
+                    h2_count += 1
+                    if h2_count == 2:  # 第二个H2标题
+                        insert_index = i
+                        break
+            
+            if insert_index == -1:
+                print("未找到合适的插入位置，将在文件末尾添加")
+                new_content = content + "\n\n" + recommendations_content
+            else:
+                # 检查是否已存在推荐号码部分
+                existing_rec_index = -1
+                for i in range(insert_index, len(lines)):
+                    if "今日推荐号码" in lines[i]:
+                        existing_rec_index = i
+                        break
+                
+                if existing_rec_index != -1:
+                    # 找到推荐号码部分的结束位置
+                    end_index = existing_rec_index
+                    for i in range(existing_rec_index + 1, len(lines)):
+                        if lines[i].startswith('## '):
+                            end_index = i
+                            break
+                    else:
+                        end_index = len(lines)
+                    
+                    # 替换现有推荐号码部分
+                    new_lines = lines[:existing_rec_index] + recommendations_content.strip().split('\n') + lines[end_index:]
+                else:
+                    # 在第二个H2标题前插入推荐号码
+                    new_lines = lines[:insert_index] + recommendations_content.strip().split('\n') + [''] + lines[insert_index:]
+                
+                new_content = '\n'.join(new_lines)
+            
+            # 写回文件
+            with open(readme_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            
+            print(f"README.md中的双色球推荐号码已更新")
+            
+        except Exception as e:
+            print(f"更新README推荐号码失败: {e}")
 
 def main():
     """主函数"""
@@ -1268,6 +1349,9 @@ def main():
     
     # 生成聚合数据文件
     analyzer.generate_aggregated_data_hjson()
+    
+    # 更新README.md中的推荐号码
+    analyzer.update_readme_recommendations()
     
     print("\n" + "=" * 50)
     print("📋 重要提醒：")

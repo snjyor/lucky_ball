@@ -99,106 +99,175 @@ class SuperLottoAnalyzer:
             return 100  # 默认返回100页
     
     def fetch_lottery_data(self, max_pages=10):
-        """抓取大乐透开奖数据"""
+        """抓取大乐透开奖数据，增强错误处理和重试机制"""
         print("开始抓取大乐透开奖数据...")
+        
+        # API接口URL
+        api_url = "https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry"
+        
+        # 更新User-Agent为更真实的浏览器标识
+        self.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': 'https://www.sporttery.cn/',
+            'Origin': 'https://www.sporttery.cn',
+            'Connection': 'keep-alive',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-site'
+        })
+        
+        consecutive_failures = 0
+        max_consecutive_failures = 5
         
         for page in range(1, max_pages + 1):
             print(f"正在抓取第 {page} 页数据...")
             
-            try:
-                params = {
-                    'gameNo': '85',  # 大乐透
-                    'provinceId': '0',
-                    'pageSize': '30',
-                    'isVerify': '1',
-                    'pageNo': str(page)
-                }
-                
-                response = self.session.get(self.base_url, params=params, timeout=10)
-                response.raise_for_status()
-                
-                data = response.json()
-                
-                if not data.get('success', False):
-                    print(f"API返回错误: {data.get('errorMessage', '未知错误')}")
-                    continue
-                
-                value = data.get('value', {})
-                results = value.get('list', [])
-                
-                if not results:
-                    print(f"第 {page} 页无数据")
-                    break
-                
-                print(f"第 {page} 页获取到 {len(results)} 条记录")
-                
-                for item in results:
-                    try:
-                        # 解析期号
-                        period = item.get('lotteryDrawNum', '')
-                        
-                        # 解析开奖日期
-                        date_str = item.get('lotteryDrawTime', '')
-                        
-                        # 解析开奖号码
-                        draw_result = item.get('lotteryDrawResult', '')
-                        if not draw_result:
-                            continue
-                        
-                        # 解析号码：格式如 "09 10 11 12 29 01 10"
-                        # 前5个是前区号码，后2个是后区号码
-                        numbers = [int(x.strip()) for x in draw_result.split()]
-                        if len(numbers) != 7:
-                            continue
-                        
-                        front_balls = numbers[:5]  # 前区5个号码
-                        back_balls = numbers[5:]   # 后区2个号码
-                        
-                        # 解析销售额
-                        sales_amount = self._parse_number(item.get('totalSaleAmount', '0'))
-                        pool_amount = self._parse_number(item.get('poolBalanceAfterdraw', '0'))
-                        
-                        # 解析奖级信息
-                        prize_levels = item.get('prizeLevelList', [])
-                        first_prize_count = 0
-                        first_prize_amount = 0
-                        second_prize_count = 0
-                        second_prize_amount = 0
-                        
-                        for prize in prize_levels:
-                            if prize.get('prizeLevel') == '一等奖' and prize.get('awardType') == 0:
-                                first_prize_count = self._parse_number(prize.get('stakeCount', '0'))
-                                first_prize_amount = self._parse_number(prize.get('stakeAmountFormat', '0'))
-                            elif prize.get('prizeLevel') == '二等奖' and prize.get('awardType') == 0:
-                                second_prize_count = self._parse_number(prize.get('stakeCount', '0'))
-                                second_prize_amount = self._parse_number(prize.get('stakeAmountFormat', '0'))
-                        
-                        # 存储数据
-                        lottery_record = {
-                            'period': period,
-                            'date': date_str,
-                            'front_balls': front_balls,
-                            'back_balls': back_balls,
-                            'first_prize_count': first_prize_count,
-                            'first_prize_amount': first_prize_amount,
-                            'second_prize_count': second_prize_count,
-                            'second_prize_amount': second_prize_amount,
-                            'sales_amount': sales_amount,
-                            'pool_amount': pool_amount
-                        }
-                        
-                        self.lottery_data.append(lottery_record)
-                        
-                    except Exception as e:
-                        print(f"解析记录时出错: {e}")
+            # 重试机制
+            max_retries = 3
+            retry_count = 0
+            success = False
+            
+            while retry_count < max_retries and not success:
+                try:
+                    # API参数
+                    params = {
+                        'gameNo': 85,  # 大乐透游戏编号
+                        'provinceId': 0,  # 全国
+                        'pageSize': 30,
+                        'isVerify': 1,
+                        'pageNo': page
+                    }
+                    
+                    # 增加延时，避免请求过于频繁
+                    if retry_count > 0:
+                        # 指数退避延时
+                        delay = min(2 ** retry_count, 10)  # 最大10秒
+                        print(f"第 {retry_count + 1} 次重试，等待 {delay} 秒...")
+                        time.sleep(delay)
+                    else:
+                        # 正常延时
+                        time.sleep(1.5)  # 增加到1.5秒
+                    
+                    response = self.session.get(api_url, params=params, timeout=15)
+                    
+                    # 检查HTTP状态码
+                    if response.status_code == 567:
+                        print(f"遇到567错误，第 {retry_count + 1} 次重试...")
+                        retry_count += 1
                         continue
-                
-                # 添加延时，避免请求过于频繁
-                time.sleep(0.5)
-                
-            except Exception as e:
-                print(f"抓取第 {page} 页时出错: {e}")
-                continue
+                    
+                    response.raise_for_status()
+                    
+                    # 解析JSON响应
+                    data = response.json()
+                    
+                    if not data.get('isSuccess', False):
+                        error_msg = data.get('errorMessage', '未知错误')
+                        # 特殊处理：如果errorMessage是"处理成功"，实际上是成功的
+                        if error_msg != '处理成功':
+                            print(f"API返回错误: {error_msg}")
+                            retry_count += 1
+                            continue
+                    
+                    value_data = data.get('value', {})
+                    results = value_data.get('list', [])
+                    
+                    if not results:
+                        print(f"第 {page} 页无数据，可能已到最后一页")
+                        return self.lottery_data
+                    
+                    print(f"第 {page} 页获取到 {len(results)} 条记录")
+                    consecutive_failures = 0  # 重置连续失败计数
+                    
+                    for item in results:
+                        try:
+                            # 解析期号
+                            period = item.get('lotteryDrawNum', '')
+                            
+                            # 解析开奖时间
+                            draw_time = item.get('lotteryDrawTime', '')
+                            # 提取日期部分
+                            date_match = re.search(r'(\d{4}-\d{2}-\d{2})', draw_time)
+                            if not date_match:
+                                continue
+                            draw_date = date_match.group(1)
+                            
+                            # 解析开奖号码
+                            draw_result = item.get('lotteryDrawResult', '')
+                            if not draw_result:
+                                continue
+                            
+                            # 分割号码：前5个是前区，后2个是后区
+                            numbers = draw_result.split(' ')
+                            if len(numbers) < 7:
+                                continue
+                            
+                            front_balls = [int(x) for x in numbers[:5]]
+                            back_balls = [int(x) for x in numbers[5:7]]
+                            
+                            # 解析奖级信息
+                            prize_list = item.get('prizeLevelList', [])
+                            first_prize_count = 0
+                            first_prize_amount = 0
+                            second_prize_count = 0
+                            second_prize_amount = 0
+                            
+                            for prize in prize_list:
+                                if prize.get('awardLevel') == '一等奖':
+                                    first_prize_count = prize.get('awardLevelNum', 0)
+                                    first_prize_amount = prize.get('awardMoney', 0)
+                                elif prize.get('awardLevel') == '二等奖':
+                                    second_prize_count = prize.get('awardLevelNum', 0)
+                                    second_prize_amount = prize.get('awardMoney', 0)
+                            
+                            # 解析其他信息
+                            sales_amount = item.get('drawMoney', 0)
+                            pool_amount = item.get('poolBalanceAfterdraw', 0)
+                            
+                            # 存储数据
+                            lottery_record = {
+                                'period': period,
+                                'date': draw_date,
+                                'front_balls': front_balls,
+                                'back_balls': back_balls,
+                                'first_prize_count': first_prize_count,
+                                'first_prize_amount': first_prize_amount,
+                                'second_prize_count': second_prize_count,
+                                'second_prize_amount': second_prize_amount,
+                                'sales_amount': sales_amount,
+                                'pool_amount': pool_amount
+                            }
+                            
+                            self.lottery_data.append(lottery_record)
+                            
+                        except Exception as e:
+                            print(f"解析记录时出错: {e}")
+                            continue
+                    
+                    success = True  # 标记成功
+                    
+                except requests.exceptions.RequestException as e:
+                    print(f"网络请求错误: {e}")
+                    retry_count += 1
+                    if retry_count >= max_retries:
+                        consecutive_failures += 1
+                        print(f"第 {page} 页重试 {max_retries} 次后仍然失败，跳过此页")
+                        break
+                except Exception as e:
+                    print(f"抓取第 {page} 页时出错: {e}")
+                    retry_count += 1
+                    if retry_count >= max_retries:
+                        consecutive_failures += 1
+                        print(f"第 {page} 页重试 {max_retries} 次后仍然失败，跳过此页")
+                        break
+            
+            # 如果连续失败太多次，停止抓取
+            if consecutive_failures >= max_consecutive_failures:
+                print(f"连续 {max_consecutive_failures} 页失败，停止抓取以避免被封禁")
+                break
         
         print(f"数据抓取完成！共获取 {len(self.lottery_data)} 期开奖数据")
         return self.lottery_data
@@ -642,8 +711,6 @@ class SuperLottoAnalyzer:
             os.makedirs('pics', exist_ok=True)
             plt.savefig('pics/super_lotto_frequency_analysis.png', dpi=300, bbox_inches='tight')
             print("频率分析图表已保存为 pics/super_lotto_frequency_analysis.png")
-        
-        plt.show()
     
     def get_lottery_rules(self):
         """获取大乐透游戏规则"""
@@ -1218,6 +1285,100 @@ class SuperLottoAnalyzer:
             'hot_backs': sorted(hot_backs)
         }
 
+    def update_readme_recommendations(self, readme_path="README.md"):
+        """更新README.md中的大乐透推荐号码"""
+        print(f"正在更新README.md中的大乐透推荐号码...")
+        
+        if not self.lottery_data:
+            print("无数据，无法更新README推荐号码")
+            return
+        
+        try:
+            # 生成推荐号码
+            recommendations = self.generate_recommendations(num_sets=5)
+            
+            # 读取现有README内容
+            with open(readme_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # 生成时间 UTC+8
+            current_time = self.format_time_utc8()
+            
+            # 构建大乐透推荐号码内容
+            dlt_recommendations_content = f"""
+### 大乐透推荐 (更新时间: {current_time})
+
+"""
+            
+            for i, rec in enumerate(recommendations, 1):
+                front_str = " ".join([f"{x:02d}" for x in rec['front_balls']])
+                back_str = " ".join([f"{x:02d}" for x in rec['back_balls']])
+                dlt_recommendations_content += f"**推荐 {i}** ({rec['strategy']}): `{front_str}` + `{back_str}`  \n"
+                dlt_recommendations_content += f"*{rec['description']} | {rec['odd_even']} | 和值:{rec['sum']} | 跨度:{rec['span']}*\n\n"
+            
+            # 查找双色球推荐部分，在其后添加大乐透推荐
+            lines = content.split('\n')
+            insert_index = -1
+            
+            # 查找双色球推荐部分的结束位置
+            for i, line in enumerate(lines):
+                if "双色球推荐" in line:
+                    # 找到下一个H2或H3标题，或文件结束
+                    for j in range(i + 1, len(lines)):
+                        if lines[j].startswith('## ') and "推荐号码" not in lines[j]:
+                            insert_index = j
+                            break
+                        elif lines[j].startswith('### ') and "大乐透推荐" in lines[j]:
+                            # 如果已存在大乐透推荐，找到其结束位置
+                            for k in range(j + 1, len(lines)):
+                                if lines[k].startswith('## ') and "推荐号码" not in lines[k]:
+                                    insert_index = k
+                                    break
+                            else:
+                                insert_index = len(lines)
+                            break
+                    else:
+                        insert_index = len(lines)
+                    break
+            
+            if insert_index == -1:
+                print("未找到双色球推荐部分，无法添加大乐透推荐")
+                return
+            
+            # 检查是否已存在大乐透推荐
+            existing_dlt_index = -1
+            for i, line in enumerate(lines):
+                if "大乐透推荐" in line:
+                    existing_dlt_index = i
+                    break
+            
+            if existing_dlt_index != -1:
+                # 找到大乐透推荐部分的结束位置
+                end_index = existing_dlt_index
+                for i in range(existing_dlt_index + 1, len(lines)):
+                    if lines[i].startswith('## ') and "推荐号码" not in lines[i]:
+                        end_index = i
+                        break
+                else:
+                    end_index = len(lines)
+                
+                # 替换现有大乐透推荐部分
+                new_lines = lines[:existing_dlt_index] + dlt_recommendations_content.strip().split('\n') + lines[end_index:]
+            else:
+                # 在指定位置插入大乐透推荐
+                new_lines = lines[:insert_index] + dlt_recommendations_content.strip().split('\n') + [''] + lines[insert_index:]
+            
+            new_content = '\n'.join(new_lines)
+            
+            # 写回文件
+            with open(readme_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            
+            print(f"README.md中的大乐透推荐号码已更新")
+            
+        except Exception as e:
+            print(f"更新README大乐透推荐号码失败: {e}")
+
 def main():
     """主函数"""
     # 显示免责声明
@@ -1269,6 +1430,9 @@ def main():
     
     # 生成聚合数据文件
     analyzer.generate_aggregated_data_hjson()
+    
+    # 更新README中的大乐透推荐号码
+    analyzer.update_readme_recommendations()
     
     print("\n" + "=" * 50)
     print("📋 重要提醒：")

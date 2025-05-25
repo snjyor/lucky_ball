@@ -88,6 +88,9 @@ def run_lottery_analyzer():
         # 生成聚合数据文件
         analyzer.generate_aggregated_data_hjson()
         
+        # 更新README中的推荐号码
+        analyzer.update_readme_recommendations()
+        
         print("✅ 双色球分析完成！")
         return True
         
@@ -129,6 +132,9 @@ def run_super_lotto_analyzer():
         
         # 生成聚合数据文件
         analyzer.generate_aggregated_data_hjson()
+        
+        # 更新README中的推荐号码
+        analyzer.update_readme_recommendations()
         
         print("✅ 大乐透分析完成！")
         return True
