@@ -42,18 +42,18 @@ jobs:
         pip install requests pandas numpy matplotlib seaborn beautifulsoup4 hjson DrissionPage
         
         # 安装Chrome浏览器（DrissionPage需要）
-        echo "安装Chrome浏览器..."
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+        # echo "安装Chrome浏览器..."
+        # wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        # echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        # sudo apt-get update
+        # sudo apt-get install -y google-chrome-stable
         
-        # 验证Chrome安装
-        google-chrome --version
+        # # 验证Chrome安装
+        # google-chrome --version
         
-        # 设置显示环境变量（无头模式）
-        export DISPLAY=:99
-        echo "Chrome浏览器安装完成"
+        # # 设置显示环境变量（无头模式）
+        # export DISPLAY=:99
+        # echo "Chrome浏览器安装完成"
         
     - name: 运行彩票数据分析
       run: |
@@ -114,7 +114,7 @@ jobs:
       run: |
         echo "准备创建发布版本..."
         # 获取当前日期作为tag (使用UTC+8时区)
-        TAG_NAME="lottery-data-$(TZ='Asia/Shanghai' date +'%Y%m%d')"
+        TAG_NAME="$(TZ='Asia/Shanghai' date +'%Y%m%d')"
         
         # 检查tag是否已存在
         if ! git tag | grep -q "^$TAG_NAME$"; then
