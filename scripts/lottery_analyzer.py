@@ -30,6 +30,7 @@ from collections import Counter, defaultdict
 import warnings
 import os
 import hjson
+import random
 warnings.filterwarnings('ignore')
 
 # 设置中文字体支持
@@ -41,194 +42,316 @@ class DoubleColorBallAnalyzer:
     
     def __init__(self):
         self.base_url = "https://www.cwl.gov.cn/ygkj/wqkjgg/"
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        self.api_url = "https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice"
+        
+        # 多个真实的User-Agent，用于轮换
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+        ]
+        
+        self.session = requests.Session()
+        self.lottery_data = []
+        
+        # 配置session
+        self._setup_session()
+        
+    def _setup_session(self):
+        """配置session的基本设置"""
+        # 设置连接池
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=10,
+            pool_maxsize=20,
+            max_retries=3
+        )
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+        
+        # 设置基本headers
+        self._update_headers()
+    
+    def _update_headers(self):
+        """更新请求头，使用随机User-Agent"""
+        user_agent = random.choice(self.user_agents)
+        
+        headers = {
+            'User-Agent': user_agent,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
             'Accept-Encoding': 'gzip, deflate, br',
             'DNT': '1',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
         }
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
-        self.lottery_data = []
+        
+        self.session.headers.update(headers)
+        print(f"🔄 更新User-Agent: {user_agent[:50]}...")
         
     def get_max_pages(self):
-        """获取真实的最大页码"""
+        """获取真实的最大页码，增强错误处理"""
         print("正在获取最大页码...")
         
-        api_url = "https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice"
+        max_retries = 5
+        base_delay = 2
         
-        try:
-            # 先获取第一页数据来确定总数
-            params = {
-                'name': 'ssq',
-                'pageNo': 1,
-                'pageSize': 30,
-                'systemType': 'PC'
-            }
-            
-            response = self.session.get(api_url, params=params, timeout=10)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            if data.get('state') != 0:
-                print(f"API返回错误: {data.get('message', '未知错误')}")
-                return 10  # 默认返回10页
-            
-            # 尝试获取总记录数
-            total_count = data.get('total', 0)
-            if total_count > 0:
-                max_pages = (total_count + 29) // 30  # 向上取整
-                print(f"发现总共 {total_count} 条记录，需要抓取 {max_pages} 页")
-                return max_pages
-            
-            # 如果无法获取总数，通过试探方式确定最大页码
-            print("无法获取总记录数，正在试探最大页码...")
-            page = 1
-            while page <= 200:  # 设置上限防止无限循环
-                params['pageNo'] = page
-                response = self.session.get(api_url, params=params, timeout=10)
-                data = response.json()
-                
-                if data.get('state') != 0 or not data.get('result'):
-                    break
-                
-                page += 10  # 每次跳跃10页快速试探
-                time.sleep(0.2)
-            
-            # 精确定位最大页码
-            start = max(1, page - 10)
-            end = page
-            
-            for precise_page in range(start, end + 1):
-                params['pageNo'] = precise_page
-                response = self.session.get(api_url, params=params, timeout=10)
-                data = response.json()
-                
-                if data.get('state') != 0 or not data.get('result'):
-                    max_pages = precise_page - 1
-                    print(f"通过试探确定最大页码为 {max_pages}")
-                    return max_pages
-                
-                time.sleep(0.1)
-            
-            return max(1, page - 1)
-            
-        except Exception as e:
-            print(f"获取最大页码时出错: {e}")
-            return 100  # 默认返回100页
-    
-    def fetch_lottery_data(self, max_pages=10):
-        """抓取双色球开奖数据"""
-        print("开始抓取双色球开奖数据...")
-        
-        # API接口URL
-        api_url = "https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice"
-        
-        for page in range(1, max_pages + 1):
-            print(f"正在抓取第 {page} 页数据...")
-            
+        for attempt in range(max_retries):
             try:
-                # API参数
+                # 每次尝试都更新headers
+                self._update_headers()
+                
+                # 先获取第一页数据来确定总数
                 params = {
-                    'name': 'ssq',  # 双色球
-                    'pageNo': page,
+                    'name': 'ssq',
+                    'pageNo': 1,
                     'pageSize': 30,
                     'systemType': 'PC'
                 }
                 
-                response = self.session.get(api_url, params=params, timeout=10)
+                # 添加随机延时
+                if attempt > 0:
+                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                    print(f"⏳ 第 {attempt + 1} 次尝试，等待 {delay:.1f} 秒...")
+                    time.sleep(delay)
+                else:
+                    time.sleep(random.uniform(1, 3))  # 初始随机延时
+                
+                print(f"🌐 正在请求API... (尝试 {attempt + 1}/{max_retries})")
+                response = self.session.get(self.api_url, params=params, timeout=30)
+                
+                print(f"📡 响应状态码: {response.status_code}")
                 response.raise_for_status()
                 
-                # 解析JSON响应
                 data = response.json()
+                print(f"📊 API响应: state={data.get('state')}, message={data.get('message')}")
                 
                 if data.get('state') != 0:
-                    print(f"API返回错误: {data.get('message', '未知错误')}")
-                    continue
-                
-                results = data.get('result', [])
-                if not results:
-                    print(f"第 {page} 页无数据")
-                    break
-                
-                print(f"第 {page} 页获取到 {len(results)} 条记录")
-                
-                for item in results:
-                    try:
-                        # 解析期号
-                        period = item.get('code', '')
-                        
-                        # 解析开奖日期
-                        date_str = item.get('date', '')
-                        # 提取日期部分，去除星期信息
-                        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', date_str)
-                        if not date_match:
-                            continue
-                        draw_date = date_match.group(1)
-                        
-                        # 解析红球号码（逗号分隔的字符串）
-                        red_str = item.get('red', '')
-                        if not red_str:
-                            continue
-                        red_balls = [int(x.strip()) for x in red_str.split(',')]
-                        
-                        # 解析蓝球号码
-                        blue_str = item.get('blue', '')
-                        if not blue_str:
-                            continue
-                        blue_ball = int(blue_str)
-                        
-                        # 解析其他信息
-                        sales_amount = self._parse_number(item.get('sales', '0'))
-                        pool_amount = self._parse_number(item.get('poolmoney', '0'))
-                        
-                        # 解析奖级信息
-                        prizegrades = item.get('prizegrades', [])
-                        first_prize_count = 0
-                        first_prize_amount = 0
-                        second_prize_count = 0
-                        second_prize_amount = 0
-                        
-                        for grade in prizegrades:
-                            if grade.get('type') == 1:  # 一等奖
-                                first_prize_count = self._parse_number(grade.get('typenum', '0'))
-                                first_prize_amount = self._parse_number(grade.get('typemoney', '0'))
-                            elif grade.get('type') == 2:  # 二等奖
-                                second_prize_count = self._parse_number(grade.get('typenum', '0'))
-                                second_prize_amount = self._parse_number(grade.get('typemoney', '0'))
-                        
-                        # 存储数据
-                        lottery_record = {
-                            'period': period,
-                            'date': draw_date,
-                            'red_balls': red_balls,
-                            'blue_ball': blue_ball,
-                            'first_prize_count': first_prize_count,
-                            'first_prize_amount': first_prize_amount,
-                            'second_prize_count': second_prize_count,
-                            'second_prize_amount': second_prize_amount,
-                            'sales_amount': sales_amount,
-                            'pool_amount': pool_amount
-                        }
-                        
-                        self.lottery_data.append(lottery_record)
-                        
-                    except Exception as e:
-                        print(f"解析记录时出错: {e}")
+                    print(f"❌ API返回错误: {data.get('message', '未知错误')}")
+                    if attempt < max_retries - 1:
                         continue
+                    else:
+                        return 100  # 默认返回100页
                 
-                # 添加延时，避免请求过于频繁
-                time.sleep(0.5)
+                # 尝试获取总记录数
+                total_count = data.get('total', 0)
+                if total_count > 0:
+                    max_pages = (total_count + 29) // 30  # 向上取整
+                    print(f"✅ 发现总共 {total_count} 条记录，需要抓取 {max_pages} 页")
+                    return max_pages
                 
+                # 如果无法获取总数，通过试探方式确定最大页码
+                print("无法获取总记录数，正在试探最大页码...")
+                page = 1
+                while page <= 200:  # 设置上限防止无限循环
+                    params['pageNo'] = page
+                    response = self.session.get(self.api_url, params=params, timeout=30)
+                    data = response.json()
+                    
+                    if data.get('state') != 0 or not data.get('result'):
+                        break
+                    
+                    page += 10  # 每次跳跃10页快速试探
+                    time.sleep(0.2)
+                
+                # 精确定位最大页码
+                start = max(1, page - 10)
+                end = page
+                
+                for precise_page in range(start, end + 1):
+                    params['pageNo'] = precise_page
+                    response = self.session.get(self.api_url, params=params, timeout=30)
+                    data = response.json()
+                    
+                    if data.get('state') != 0 or not data.get('result'):
+                        max_pages = precise_page - 1
+                        print(f"✅ 通过试探确定最大页码为 {max_pages}")
+                        return max_pages
+                    
+                    time.sleep(0.1)
+                
+                return max(1, page - 1)
+                
+            except requests.exceptions.Timeout:
+                print(f"⏰ 请求超时 (尝试 {attempt + 1}/{max_retries})")
+            except requests.exceptions.ConnectionError:
+                print(f"🔌 连接错误 (尝试 {attempt + 1}/{max_retries})")
+            except requests.exceptions.HTTPError as e:
+                print(f"🌐 HTTP错误: {e} (尝试 {attempt + 1}/{max_retries})")
             except Exception as e:
-                print(f"抓取第 {page} 页时出错: {e}")
-                continue
+                print(f"❌ 获取最大页码时出错: {e} (尝试 {attempt + 1}/{max_retries})")
+            
+            if attempt < max_retries - 1:
+                print("🔄 准备重试...")
         
-        print(f"数据抓取完成！共获取 {len(self.lottery_data)} 期开奖数据")
+        print("⚠️  所有尝试都失败，使用默认页数 100")
+        return 100
+    
+    def fetch_lottery_data(self, max_pages=10):
+        """抓取双色球开奖数据，增强错误处理"""
+        print("开始抓取双色球开奖数据...")
+        
+        consecutive_failures = 0
+        max_consecutive_failures = 5
+        successful_pages = 0
+        
+        for page in range(1, max_pages + 1):
+            print(f"📄 正在抓取第 {page} 页数据...")
+            
+            # 重试机制
+            max_retries = 5
+            retry_count = 0
+            success = False
+            base_delay = 1
+            
+            while retry_count < max_retries and not success:
+                try:
+                    # 每隔几次请求更新headers
+                    if page % 5 == 1 or retry_count > 0:
+                        self._update_headers()
+                    
+                    # API参数
+                    params = {
+                        'name': 'ssq',  # 双色球
+                        'pageNo': page,
+                        'pageSize': 30,
+                        'systemType': 'PC'
+                    }
+                    
+                    # 计算延时
+                    if retry_count > 0:
+                        # 指数退避延时，加上随机因子
+                        delay = min(base_delay * (2 ** retry_count), 15) + random.uniform(0, 2)
+                        print(f"⏳ 第 {retry_count + 1} 次重试，等待 {delay:.1f} 秒...")
+                        time.sleep(delay)
+                    else:
+                        # 正常延时，避免请求过于频繁
+                        delay = random.uniform(1, 2)  # 1-2秒随机延时
+                        time.sleep(delay)
+                    
+                    print(f"🌐 发送请求到API... (页面 {page}, 尝试 {retry_count + 1})")
+                    response = self.session.get(self.api_url, params=params, timeout=30)
+                    
+                    print(f"📡 响应状态码: {response.status_code}")
+                    response.raise_for_status()
+                    
+                    # 解析JSON响应
+                    data = response.json()
+                    print(f"📊 API响应解析: state={data.get('state')}")
+                    
+                    if data.get('state') != 0:
+                        print(f"❌ API返回错误: {data.get('message', '未知错误')}")
+                        retry_count += 1
+                        continue
+                    
+                    results = data.get('result', [])
+                    if not results:
+                        print(f"📭 第 {page} 页无数据")
+                        break
+                    
+                    print(f"✅ 第 {page} 页获取到 {len(results)} 条记录")
+                    consecutive_failures = 0  # 重置连续失败计数
+                    successful_pages += 1
+                    
+                    for item in results:
+                        try:
+                            # 解析期号
+                            period = item.get('code', '')
+                            
+                            # 解析开奖日期
+                            date_str = item.get('date', '')
+                            # 提取日期部分，去除星期信息
+                            date_match = re.search(r'(\d{4}-\d{2}-\d{2})', date_str)
+                            if not date_match:
+                                continue
+                            draw_date = date_match.group(1)
+                            
+                            # 解析红球号码（逗号分隔的字符串）
+                            red_str = item.get('red', '')
+                            if not red_str:
+                                continue
+                            red_balls = [int(x.strip()) for x in red_str.split(',')]
+                            
+                            # 解析蓝球号码
+                            blue_str = item.get('blue', '')
+                            if not blue_str:
+                                continue
+                            blue_ball = int(blue_str)
+                            
+                            # 解析其他信息
+                            sales_amount = self._parse_number(item.get('sales', '0'))
+                            pool_amount = self._parse_number(item.get('poolmoney', '0'))
+                            
+                            # 解析奖级信息
+                            prizegrades = item.get('prizegrades', [])
+                            first_prize_count = 0
+                            first_prize_amount = 0
+                            second_prize_count = 0
+                            second_prize_amount = 0
+                            
+                            for grade in prizegrades:
+                                if grade.get('type') == 1:  # 一等奖
+                                    first_prize_count = self._parse_number(grade.get('typenum', '0'))
+                                    first_prize_amount = self._parse_number(grade.get('typemoney', '0'))
+                                elif grade.get('type') == 2:  # 二等奖
+                                    second_prize_count = self._parse_number(grade.get('typenum', '0'))
+                                    second_prize_amount = self._parse_number(grade.get('typemoney', '0'))
+                            
+                            # 存储数据
+                            lottery_record = {
+                                'period': period,
+                                'date': draw_date,
+                                'red_balls': red_balls,
+                                'blue_ball': blue_ball,
+                                'first_prize_count': first_prize_count,
+                                'first_prize_amount': first_prize_amount,
+                                'second_prize_count': second_prize_count,
+                                'second_prize_amount': second_prize_amount,
+                                'sales_amount': sales_amount,
+                                'pool_amount': pool_amount
+                            }
+                            
+                            self.lottery_data.append(lottery_record)
+                            
+                        except Exception as e:
+                            print(f"⚠️  解析记录时出错: {e}")
+                            continue
+                    
+                    success = True  # 标记成功
+                    
+                except requests.exceptions.Timeout:
+                    print(f"⏰ 网络超时 (页面 {page}, 尝试 {retry_count + 1})")
+                    retry_count += 1
+                except requests.exceptions.ConnectionError:
+                    print(f"🔌 连接错误 (页面 {page}, 尝试 {retry_count + 1})")
+                    retry_count += 1
+                except requests.exceptions.HTTPError as e:
+                    print(f"🌐 HTTP错误: {e} (页面 {page}, 尝试 {retry_count + 1})")
+                    retry_count += 1
+                except Exception as e:
+                    print(f"❌ 抓取第 {page} 页时出错: {e} (尝试 {retry_count + 1})")
+                    retry_count += 1
+                
+                if retry_count >= max_retries:
+                    consecutive_failures += 1
+                    print(f"💥 第 {page} 页重试 {max_retries} 次后仍然失败，跳过此页")
+                    break
+            
+            # 如果连续失败太多次，停止抓取
+            if consecutive_failures >= max_consecutive_failures:
+                print(f"🛑 连续 {max_consecutive_failures} 页失败，停止抓取以避免被封禁")
+                break
+        
+        print(f"🎉 数据抓取完成！成功抓取 {successful_pages} 页，共获取 {len(self.lottery_data)} 期开奖数据")
+        
+        # 如果获取的数据太少，给出警告
+        if len(self.lottery_data) < 100:
+            print(f"⚠️  获取的数据较少 ({len(self.lottery_data)} 期)，可能存在网络问题")
+        
         return self.lottery_data
     
     def _parse_number(self, text):
@@ -475,7 +598,6 @@ class DoubleColorBallAnalyzer:
             }
         ]
         
-        import random
         random.seed(42)  # 固定种子，确保结果可重现
         
         for i, strategy in enumerate(strategies[:num_sets]):
@@ -574,7 +696,6 @@ class DoubleColorBallAnalyzer:
         selected = []
         
         # 选择奇数
-        import random
         if needed_odd > 0 and odd_pool:
             actual_odd = min(needed_odd, len(odd_pool))
             selected.extend(random.sample(odd_pool, actual_odd))
@@ -1215,7 +1336,7 @@ class DoubleColorBallAnalyzer:
             'hot_blues': sorted(hot_blues)
         }
     
-    def update_readme_recommendations(self, readme_path="README.md"):
+    def update_readme_recommendations(self, readme_path="README.md", timestamp=None):
         """更新README.md中的推荐号码"""
         print(f"正在更新README.md中的双色球推荐号码...")
         
@@ -1231,8 +1352,11 @@ class DoubleColorBallAnalyzer:
             with open(readme_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # 生成时间 UTC+8
-            current_time = (datetime.now() + timedelta(hours=8)).strftime('%Y年%m月%d日 %H:%M:%S')
+            # 使用传入的时间戳或生成新的时间戳 UTC+8
+            if timestamp:
+                current_time = timestamp
+            else:
+                current_time = (datetime.now() + timedelta(hours=8)).strftime('%Y年%m月%d日 %H:%M:%S')
             
             # 构建推荐号码内容
             recommendations_content = f"""## 🎯 今日推荐号码

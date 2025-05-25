@@ -53,7 +53,7 @@ def show_disclaimer():
     print("• 使用本软件产生的任何后果由用户自行承担")
     print("=" * 80)
 
-def run_lottery_analyzer():
+def run_lottery_analyzer(unified_timestamp=None):
     """运行双色球分析器"""
     print("\n" + "=" * 60)
     print("🔴 开始运行双色球数据分析...")
@@ -88,8 +88,8 @@ def run_lottery_analyzer():
         # 生成聚合数据文件
         analyzer.generate_aggregated_data_hjson()
         
-        # 更新README中的推荐号码
-        analyzer.update_readme_recommendations()
+        # 更新README中的推荐号码（使用统一时间戳）
+        analyzer.update_readme_recommendations(timestamp=unified_timestamp)
         
         print("✅ 双色球分析完成！")
         return True
@@ -98,7 +98,7 @@ def run_lottery_analyzer():
         print(f"❌ 双色球分析出错: {e}")
         return False
 
-def run_super_lotto_analyzer():
+def run_super_lotto_analyzer(unified_timestamp=None):
     """运行大乐透分析器"""
     print("\n" + "=" * 60)
     print("🔵 开始运行大乐透数据分析...")
@@ -133,8 +133,8 @@ def run_super_lotto_analyzer():
         # 生成聚合数据文件
         analyzer.generate_aggregated_data_hjson()
         
-        # 更新README中的推荐号码
-        analyzer.update_readme_recommendations()
+        # 更新README中的推荐号码（使用统一时间戳）
+        analyzer.update_readme_recommendations(timestamp=unified_timestamp)
         
         print("✅ 大乐透分析完成！")
         return True
@@ -146,20 +146,22 @@ def run_super_lotto_analyzer():
 def main():
     """主函数"""
     start_time = time.time()
-    current_time = get_current_time_utc8()
+    
+    # 生成统一的时间戳（UTC+8）
+    unified_timestamp = get_current_time_utc8()
     
     # 显示免责声明
     show_disclaimer()
     
-    print(f"\n🕐 开始时间: {current_time} (UTC+8)")
+    print(f"\n🕐 开始时间: {unified_timestamp} (UTC+8)")
     print("🚀 正在初始化系统...")
     
     # 创建目录结构
     create_directories()
     
-    # 运行分析器
-    lottery_success = run_lottery_analyzer()
-    super_lotto_success = run_super_lotto_analyzer()
+    # 运行分析器（传入统一时间戳）
+    lottery_success = run_lottery_analyzer(unified_timestamp)
+    super_lotto_success = run_super_lotto_analyzer(unified_timestamp)
     
     # 总结结果
     end_time = time.time()
@@ -174,16 +176,18 @@ def main():
     print(f"⏱️  总耗时: {duration:.1f} 秒")
     print(f"🕐 完成时间: {current_time} (UTC+8)")
     
-    if lottery_success and super_lotto_success:
+    if lottery_success or super_lotto_success:
         print("\n📁 生成的文件:")
-        print("• data/lottery_data.json - 双色球开奖数据")
-        print("• data/super_lotto_data.json - 大乐透开奖数据")
-        print("• data/lottery_aggregated_data.hjson - 双色球聚合分析数据")
-        print("• data/super_lotto_aggregated_data.hjson - 大乐透聚合分析数据")
-        print("• reports/analysis_report.md - 双色球分析报告")
-        print("• reports/super_lotto_analysis_report.md - 大乐透分析报告")
-        print("• pics/lottery_frequency_analysis.png - 双色球频率图表")
-        print("• pics/super_lotto_frequency_analysis.png - 大乐透频率图表")
+        if lottery_success:
+            print("• data/lottery_data.json - 双色球开奖数据")
+            print("• data/lottery_aggregated_data.hjson - 双色球聚合分析数据")
+            print("• reports/analysis_report.md - 双色球分析报告")
+            print("• pics/lottery_frequency_analysis.png - 双色球频率图表")
+        if super_lotto_success:
+            print("• data/super_lotto_data.json - 大乐透开奖数据")
+            print("• data/super_lotto_aggregated_data.hjson - 大乐透聚合分析数据")
+            print("• reports/super_lotto_analysis_report.md - 大乐透分析报告")
+            print("• pics/super_lotto_frequency_analysis.png - 大乐透频率图表")
     
     print("\n" + "=" * 80)
     print("📋 重要提醒：")
@@ -193,11 +197,17 @@ def main():
     print("• 如有赌博问题，请寻求专业帮助")
     print("=" * 80)
     
-    if lottery_success and super_lotto_success:
-        print("🎉 所有分析任务完成！")
+    # 改进的返回逻辑：只要有一个成功就返回0，避免因大乐透失败影响双色球数据提交
+    if lottery_success or super_lotto_success:
+        if lottery_success and super_lotto_success:
+            print("🎉 所有分析任务完成！")
+        elif lottery_success:
+            print("🎉 双色球分析完成！大乐透分析失败，但不影响数据提交。")
+        else:
+            print("🎉 大乐透分析完成！双色球分析失败，但不影响数据提交。")
         return 0
     else:
-        print("⚠️  部分分析任务失败，请检查网络连接和依赖库")
+        print("⚠️  所有分析任务失败，请检查网络连接和依赖库")
         return 1
 
 if __name__ == "__main__":

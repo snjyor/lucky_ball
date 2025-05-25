@@ -29,6 +29,7 @@ from collections import Counter, defaultdict
 import warnings
 import os
 import hjson
+import random
 warnings.filterwarnings('ignore')
 
 # 设置中文字体支持
@@ -40,20 +41,64 @@ class SuperLottoAnalyzer:
     
     def __init__(self):
         self.base_url = "https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry"
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        
+        # 多个真实的User-Agent，用于轮换
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+        ]
+        
+        self.session = requests.Session()
+        self.lottery_data = []
+        # 设置UTC+8时区
+        self.utc8_tz = timezone(timedelta(hours=8))
+        
+        # 配置session
+        self._setup_session()
+        
+    def _setup_session(self):
+        """配置session的基本设置"""
+        # 设置连接池
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=10,
+            pool_maxsize=20,
+            max_retries=3
+        )
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+        
+        # 设置基本headers
+        self._update_headers()
+    
+    def _update_headers(self):
+        """更新请求头，使用随机User-Agent"""
+        user_agent = random.choice(self.user_agents)
+        
+        headers = {
+            'User-Agent': user_agent,
             'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
             'Accept-Encoding': 'gzip, deflate, br',
             'DNT': '1',
             'Connection': 'keep-alive',
             'Referer': 'https://www.sporttery.cn/',
+            'Origin': 'https://www.sporttery.cn',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-site',
+            'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
         }
-        self.session = requests.Session()
-        self.session.headers.update(self.headers)
-        self.lottery_data = []
-        # 设置UTC+8时区
-        self.utc8_tz = timezone(timedelta(hours=8))
+        
+        self.session.headers.update(headers)
+        print(f"🔄 更新User-Agent: {user_agent[:50]}...")
         
     def get_current_time_utc8(self):
         """获取UTC+8时区的当前时间"""
@@ -66,72 +111,109 @@ class SuperLottoAnalyzer:
         return dt.strftime('%Y年%m月%d日 %H:%M:%S')
     
     def get_max_pages(self):
-        """获取总页数"""
+        """获取总页数，增强错误处理"""
         print("正在获取总页数...")
         
-        try:
-            params = {
-                'gameNo': '85',  # 大乐透
-                'provinceId': '0',
-                'pageSize': '30',
-                'isVerify': '1',
-                'pageNo': '1'
-            }
+        max_retries = 5
+        base_delay = 2
+        
+        for attempt in range(max_retries):
+            try:
+                # 每次尝试都更新headers
+                self._update_headers()
+                
+                params = {
+                    'gameNo': '85',  # 大乐透
+                    'provinceId': '0',
+                    'pageSize': '30',
+                    'isVerify': '1',
+                    'pageNo': '1'
+                }
+                
+                # 添加随机延时
+                if attempt > 0:
+                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                    print(f"⏳ 第 {attempt + 1} 次尝试，等待 {delay:.1f} 秒...")
+                    time.sleep(delay)
+                else:
+                    time.sleep(random.uniform(1, 3))  # 初始随机延时
+                
+                print(f"🌐 正在请求API... (尝试 {attempt + 1}/{max_retries})")
+                response = self.session.get(self.base_url, params=params, timeout=30)
+                
+                print(f"📡 响应状态码: {response.status_code}")
+                
+                # 特殊处理567错误
+                if response.status_code == 567:
+                    print(f"⚠️  遇到567错误，这可能是服务器临时问题")
+                    if attempt < max_retries - 1:
+                        continue
+                    else:
+                        print("❌ 多次尝试后仍然是567错误，使用默认页数")
+                        return 100
+                
+                response.raise_for_status()
+                
+                data = response.json()
+                print(f"📊 API响应: isSuccess={data.get('isSuccess')}, errorMessage={data.get('errorMessage')}")
+                
+                # 特殊处理：某些情况下errorMessage是"处理成功"但isSuccess是false
+                if not data.get('isSuccess', False):
+                    error_msg = data.get('errorMessage', '未知错误')
+                    if error_msg == '处理成功':
+                        print("✅ API返回'处理成功'，继续处理数据")
+                    else:
+                        print(f"❌ API返回错误: {error_msg}")
+                        if attempt < max_retries - 1:
+                            continue
+                        else:
+                            return 100
+                
+                value = data.get('value', {})
+                total_pages = value.get('pages', 100)
+                total_records = value.get('total', 0)
+                
+                print(f"✅ 成功获取页数信息: 总记录 {total_records} 条，共 {total_pages} 页")
+                return total_pages
+                
+            except requests.exceptions.Timeout:
+                print(f"⏰ 请求超时 (尝试 {attempt + 1}/{max_retries})")
+            except requests.exceptions.ConnectionError:
+                print(f"🔌 连接错误 (尝试 {attempt + 1}/{max_retries})")
+            except requests.exceptions.HTTPError as e:
+                print(f"🌐 HTTP错误: {e} (尝试 {attempt + 1}/{max_retries})")
+            except Exception as e:
+                print(f"❌ 获取总页数时出错: {e} (尝试 {attempt + 1}/{max_retries})")
             
-            response = self.session.get(self.base_url, params=params, timeout=10)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            if not data.get('success', False):
-                print(f"API返回错误: {data.get('errorMessage', '未知错误')}")
-                return 10
-            
-            value = data.get('value', {})
-            total_pages = value.get('pages', 10)
-            total_records = value.get('total', 0)
-            
-            print(f"发现总共 {total_records} 条记录，共 {total_pages} 页")
-            return total_pages
-            
-        except Exception as e:
-            print(f"获取总页数时出错: {e}")
-            return 100  # 默认返回100页
+            if attempt < max_retries - 1:
+                print("🔄 准备重试...")
+        
+        print("⚠️  所有尝试都失败，使用默认页数 100")
+        return 100
     
     def fetch_lottery_data(self, max_pages=10):
         """抓取大乐透开奖数据，增强错误处理和重试机制"""
         print("开始抓取大乐透开奖数据...")
         
-        # API接口URL
-        api_url = "https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry"
-        
-        # 更新User-Agent为更真实的浏览器标识
-        self.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Referer': 'https://www.sporttery.cn/',
-            'Origin': 'https://www.sporttery.cn',
-            'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site'
-        })
-        
         consecutive_failures = 0
         max_consecutive_failures = 5
+        successful_pages = 0
         
         for page in range(1, max_pages + 1):
-            print(f"正在抓取第 {page} 页数据...")
+            print(f"📄 正在抓取第 {page} 页数据...")
             
             # 重试机制
-            max_retries = 3
+            max_retries = 5
             retry_count = 0
             success = False
+            base_delay = 1
             
             while retry_count < max_retries and not success:
                 try:
+                    # 每隔几次请求更新headers
+                    if page % 5 == 1 or retry_count > 0:
+                        self._update_headers()
+                    
                     # API参数
                     params = {
                         'gameNo': 85,  # 大乐透游戏编号
@@ -141,21 +223,30 @@ class SuperLottoAnalyzer:
                         'pageNo': page
                     }
                     
-                    # 增加延时，避免请求过于频繁
+                    # 计算延时
                     if retry_count > 0:
-                        # 指数退避延时
-                        delay = min(2 ** retry_count, 10)  # 最大10秒
-                        print(f"第 {retry_count + 1} 次重试，等待 {delay} 秒...")
+                        # 指数退避延时，加上随机因子
+                        delay = min(base_delay * (2 ** retry_count), 15) + random.uniform(0, 2)
+                        print(f"⏳ 第 {retry_count + 1} 次重试，等待 {delay:.1f} 秒...")
                         time.sleep(delay)
                     else:
-                        # 正常延时
-                        time.sleep(1.5)  # 增加到1.5秒
+                        # 正常延时，避免请求过于频繁
+                        delay = random.uniform(2, 4)  # 增加到2-4秒随机延时
+                        time.sleep(delay)
                     
-                    response = self.session.get(api_url, params=params, timeout=15)
+                    print(f"🌐 发送请求到API... (页面 {page}, 尝试 {retry_count + 1})")
+                    response = self.session.get(self.base_url, params=params, timeout=30)
+                    
+                    print(f"📡 响应状态码: {response.status_code}")
                     
                     # 检查HTTP状态码
                     if response.status_code == 567:
-                        print(f"遇到567错误，第 {retry_count + 1} 次重试...")
+                        print(f"⚠️  遇到567错误，第 {retry_count + 1} 次重试...")
+                        retry_count += 1
+                        continue
+                    elif response.status_code == 429:
+                        print(f"🚫 遇到429限流错误，延长等待时间...")
+                        time.sleep(10 + random.uniform(0, 5))
                         retry_count += 1
                         continue
                     
@@ -163,12 +254,15 @@ class SuperLottoAnalyzer:
                     
                     # 解析JSON响应
                     data = response.json()
+                    print(f"📊 API响应解析: isSuccess={data.get('isSuccess')}")
                     
                     if not data.get('isSuccess', False):
                         error_msg = data.get('errorMessage', '未知错误')
                         # 特殊处理：如果errorMessage是"处理成功"，实际上是成功的
-                        if error_msg != '处理成功':
-                            print(f"API返回错误: {error_msg}")
+                        if error_msg == '处理成功':
+                            print("✅ API返回'处理成功'，继续处理数据")
+                        else:
+                            print(f"❌ API返回错误: {error_msg}")
                             retry_count += 1
                             continue
                     
@@ -176,11 +270,12 @@ class SuperLottoAnalyzer:
                     results = value_data.get('list', [])
                     
                     if not results:
-                        print(f"第 {page} 页无数据，可能已到最后一页")
+                        print(f"📭 第 {page} 页无数据，可能已到最后一页")
                         return self.lottery_data
                     
-                    print(f"第 {page} 页获取到 {len(results)} 条记录")
+                    print(f"✅ 第 {page} 页获取到 {len(results)} 条记录")
                     consecutive_failures = 0  # 重置连续失败计数
+                    successful_pages += 1
                     
                     for item in results:
                         try:
@@ -244,32 +339,40 @@ class SuperLottoAnalyzer:
                             self.lottery_data.append(lottery_record)
                             
                         except Exception as e:
-                            print(f"解析记录时出错: {e}")
+                            print(f"⚠️  解析记录时出错: {e}")
                             continue
                     
                     success = True  # 标记成功
                     
-                except requests.exceptions.RequestException as e:
-                    print(f"网络请求错误: {e}")
+                except requests.exceptions.Timeout:
+                    print(f"⏰ 网络超时 (页面 {page}, 尝试 {retry_count + 1})")
                     retry_count += 1
-                    if retry_count >= max_retries:
-                        consecutive_failures += 1
-                        print(f"第 {page} 页重试 {max_retries} 次后仍然失败，跳过此页")
-                        break
+                except requests.exceptions.ConnectionError:
+                    print(f"🔌 连接错误 (页面 {page}, 尝试 {retry_count + 1})")
+                    retry_count += 1
+                except requests.exceptions.HTTPError as e:
+                    print(f"🌐 HTTP错误: {e} (页面 {page}, 尝试 {retry_count + 1})")
+                    retry_count += 1
                 except Exception as e:
-                    print(f"抓取第 {page} 页时出错: {e}")
+                    print(f"❌ 抓取第 {page} 页时出错: {e} (尝试 {retry_count + 1})")
                     retry_count += 1
-                    if retry_count >= max_retries:
-                        consecutive_failures += 1
-                        print(f"第 {page} 页重试 {max_retries} 次后仍然失败，跳过此页")
-                        break
+                
+                if retry_count >= max_retries:
+                    consecutive_failures += 1
+                    print(f"💥 第 {page} 页重试 {max_retries} 次后仍然失败，跳过此页")
+                    break
             
             # 如果连续失败太多次，停止抓取
             if consecutive_failures >= max_consecutive_failures:
-                print(f"连续 {max_consecutive_failures} 页失败，停止抓取以避免被封禁")
+                print(f"🛑 连续 {max_consecutive_failures} 页失败，停止抓取以避免被封禁")
                 break
         
-        print(f"数据抓取完成！共获取 {len(self.lottery_data)} 期开奖数据")
+        print(f"🎉 数据抓取完成！成功抓取 {successful_pages} 页，共获取 {len(self.lottery_data)} 期开奖数据")
+        
+        # 如果获取的数据太少，给出警告
+        if len(self.lottery_data) < 100:
+            print(f"⚠️  获取的数据较少 ({len(self.lottery_data)} 期)，可能存在网络问题")
+        
         return self.lottery_data
     
     def _parse_number(self, text):
@@ -521,7 +624,6 @@ class SuperLottoAnalyzer:
             }
         ]
         
-        import random
         random.seed(42)  # 固定种子，确保结果可重现
         
         for i, strategy in enumerate(strategies[:num_sets]):
@@ -631,7 +733,6 @@ class SuperLottoAnalyzer:
         selected = []
         
         # 选择奇数
-        import random
         if needed_odd > 0 and odd_pool:
             actual_odd = min(needed_odd, len(odd_pool))
             selected.extend(random.sample(odd_pool, actual_odd))
@@ -1285,7 +1386,7 @@ class SuperLottoAnalyzer:
             'hot_backs': sorted(hot_backs)
         }
 
-    def update_readme_recommendations(self, readme_path="README.md"):
+    def update_readme_recommendations(self, readme_path="README.md", timestamp=None):
         """更新README.md中的大乐透推荐号码"""
         print(f"正在更新README.md中的大乐透推荐号码...")
         
@@ -1301,8 +1402,11 @@ class SuperLottoAnalyzer:
             with open(readme_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # 生成时间 UTC+8
-            current_time = self.format_time_utc8()
+            # 使用传入的时间戳或生成新的时间戳 UTC+8
+            if timestamp:
+                current_time = timestamp
+            else:
+                current_time = self.format_time_utc8()
             
             # 构建大乐透推荐号码内容
             dlt_recommendations_content = f"""

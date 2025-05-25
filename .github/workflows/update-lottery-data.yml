@@ -43,29 +43,62 @@ jobs:
         
     - name: 运行彩票数据分析
       run: |
+        echo "开始运行彩票数据分析..."
         python main.py
+        exit_code=$?
+        echo "分析完成，退出码: $exit_code"
+        
+        # 不管成功失败都继续到下一步，让git变更检查来决定是否需要提交
+        # 这样可以确保：
+        # 1. 只有真正有数据更新时才会提交（通过git diff检查）
+        # 2. 即使部分分析失败，成功的部分仍能提交
+        # 3. 避免因为旧文件存在而误判为成功
+        echo "继续到文件变更检查步骤..."
         
     - name: 检查文件变更
       id: git-check
       run: |
-        git diff --exit-code data/ reports/ pics/ || echo "changed=true" >> $GITHUB_OUTPUT
+        echo "检查文件变更..."
+        if git diff --exit-code data/ reports/ pics/ > /dev/null 2>&1; then
+          echo "没有检测到文件变更"
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "检测到文件变更"
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "变更的文件:"
+          git diff --name-only data/ reports/ pics/ || true
+        fi
         
     - name: 提交更新
       if: steps.git-check.outputs.changed == 'true'
       run: |
+        echo "准备提交文件变更..."
         git config --local user.email "snjyor@gmail.com"
         git config --local user.name "snjyor"
-        git add data/
-        git add reports/
-        git add pics/
-        git commit -m "🎯 更新彩票数据和分析报告 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
+        
+        # 检查并添加存在的文件
+        [ -d "data" ] && git add data/ || echo "data目录不存在"
+        [ -d "reports" ] && git add reports/ || echo "reports目录不存在"  
+        [ -d "pics" ] && git add pics/ || echo "pics目录不存在"
+        
+        # 检查是否有文件被添加
+        if git diff --cached --quiet; then
+          echo "没有文件需要提交"
+          exit 0
+        fi
+        
+        # 提交变更
+        commit_message="🎯 更新彩票数据和分析报告 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
+        git commit -m "$commit_message"
         git push
+        echo "文件提交成功"
         
     - name: 创建重大更新的发布版本
       if: steps.git-check.outputs.changed == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        echo "准备创建发布版本..."
         # 获取当前日期作为tag (使用UTC+8时区)
         TAG_NAME="lottery-data-$(TZ='Asia/Shanghai' date +'%Y%m%d')"
         
@@ -102,24 +135,47 @@ jobs:
         本数据仅供学习和统计分析使用，彩票开奖完全随机，请理性购彩。
         EOF
           
-          # 使用GitHub CLI创建release
-          gh release create $TAG_NAME \
-            --title "彩票数据更新 $TAG_NAME" \
-            --notes-file release_notes.md \
-            data/lottery_data.json \
-            data/super_lotto_data.json \
-            data/lottery_aggregated_data.hjson \
-            data/super_lotto_aggregated_data.hjson \
-            reports/analysis_report.md \
-            reports/super_lotto_analysis_report.md \
-            pics/lottery_frequency_analysis.png \
-            pics/super_lotto_frequency_analysis.png
+          # 准备要上传的文件列表（只上传存在的文件）
+          upload_files=""
+          [ -f "data/lottery_data.json" ] && upload_files="$upload_files data/lottery_data.json"
+          [ -f "data/super_lotto_data.json" ] && upload_files="$upload_files data/super_lotto_data.json"
+          [ -f "data/lottery_aggregated_data.hjson" ] && upload_files="$upload_files data/lottery_aggregated_data.hjson"
+          [ -f "data/super_lotto_aggregated_data.hjson" ] && upload_files="$upload_files data/super_lotto_aggregated_data.hjson"
+          [ -f "reports/analysis_report.md" ] && upload_files="$upload_files reports/analysis_report.md"
+          [ -f "reports/super_lotto_analysis_report.md" ] && upload_files="$upload_files reports/super_lotto_analysis_report.md"
+          [ -f "pics/lottery_frequency_analysis.png" ] && upload_files="$upload_files pics/lottery_frequency_analysis.png"
+          [ -f "pics/super_lotto_frequency_analysis.png" ] && upload_files="$upload_files pics/super_lotto_frequency_analysis.png"
+          
+          # 使用GitHub CLI创建release（只上传存在的文件）
+          if [ -n "$upload_files" ]; then
+            gh release create $TAG_NAME \
+              --title "彩票数据更新 $TAG_NAME" \
+              --notes-file release_notes.md \
+              $upload_files
+            echo "发布版本创建成功，包含文件: $upload_files"
+          else
+            gh release create $TAG_NAME \
+              --title "彩票数据更新 $TAG_NAME" \
+              --notes-file release_notes.md
+            echo "发布版本创建成功，但没有数据文件可上传"
+          fi
+        else
+          echo "Tag $TAG_NAME 已存在，跳过创建发布版本"
         fi
         
     - name: 输出结果
       run: |
         if [ "${{ steps.git-check.outputs.changed }}" == "true" ]; then
           echo "✅ 彩票数据已更新并提交 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
+          
+          # 显示更新的文件
+          echo "📁 更新的文件:"
+          [ -f "data/lottery_data.json" ] && echo "  ✓ 双色球开奖数据"
+          [ -f "data/super_lotto_data.json" ] && echo "  ✓ 大乐透开奖数据"
+          [ -f "reports/analysis_report.md" ] && echo "  ✓ 双色球分析报告"
+          [ -f "reports/super_lotto_analysis_report.md" ] && echo "  ✓ 大乐透分析报告"
+          [ -f "pics/lottery_frequency_analysis.png" ] && echo "  ✓ 双色球频率图表"
+          [ -f "pics/super_lotto_frequency_analysis.png" ] && echo "  ✓ 大乐透频率图表"
         else
           echo "ℹ️ 彩票数据无变化，跳过提交 - $(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S') (UTC+8)"
         fi 
