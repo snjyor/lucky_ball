@@ -6,7 +6,7 @@
 
 import sys
 import json
-from lottery_analyzer import DoubleColorBallAnalyzer
+from scripts.lottery_analyzer import DoubleColorBallAnalyzer
 
 def test_analyzer():
     """测试分析器基本功能"""

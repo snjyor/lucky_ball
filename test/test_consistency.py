@@ -4,7 +4,7 @@
 测试推荐算法一致性
 """
 
-from lottery_analyzer import DoubleColorBallAnalyzer
+from scripts.lottery_analyzer import DoubleColorBallAnalyzer
 
 def test_consistency():
     """测试推荐算法的一致性"""
