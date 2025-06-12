@@ -1,5 +1,24 @@
 [
   {
+    "period": "2025066",
+    "date": "2025-06-12",
+    "red_balls": [
+      6,
+      22,
+      24,
+      27,
+      28,
+      30
+    ],
+    "blue_ball": 4,
+    "first_prize_count": 10,
+    "first_prize_amount": 6441022,
+    "second_prize_count": 94,
+    "second_prize_amount": 191625,
+    "sales_amount": 366359214,
+    "pool_amount": 2400049823
+  },
+  {
     "period": "2025065",
     "date": "2025-06-10",
     "red_balls": [
