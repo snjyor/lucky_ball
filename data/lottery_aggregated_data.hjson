@@ -8,11 +8,11 @@
     lottery_type: 双色球
     lottery_type_en: double_color_ball
     game_rules: 红球1-33选6个，蓝球1-16选1个
-    generated_time: 2025年07月23日 23:05:21
+    generated_time: 2025年07月24日 23:04:33
     timezone: UTC+8
-    total_periods: 1890
-    latest_period: "2025083"
-    latest_date: 2025-07-22
+    total_periods: 1891
+    latest_period: "2025084"
+    latest_date: 2025-07-24
     data_source: 中国福利彩票官方API
   }
   frequency_analysis:
@@ -29,102 +29,102 @@
         {
           number: 1
           count: 367
-          frequency: 19.42
+          frequency: 19.41
         }
         {
           number: 2
           count: 366
-          frequency: 19.37
+          frequency: 19.35
         }
         {
           number: 3
           count: 316
-          frequency: 16.72
+          frequency: 16.71
         }
         {
           number: 4
           count: 326
-          frequency: 17.25
+          frequency: 17.24
         }
         {
           number: 5
           count: 326
-          frequency: 17.25
+          frequency: 17.24
         }
         {
           number: 6
-          count: 390
-          frequency: 20.63
+          count: 391
+          frequency: 20.68
         }
         {
           number: 7
           count: 353
-          frequency: 18.68
+          frequency: 18.67
         }
         {
           number: 8
-          count: 345
-          frequency: 18.25
+          count: 346
+          frequency: 18.3
         }
         {
           number: 9
           count: 368
-          frequency: 19.47
+          frequency: 19.46
         }
         {
           number: 10
-          count: 359
-          frequency: 18.99
+          count: 360
+          frequency: 19.04
         }
         {
           number: 11
           count: 330
-          frequency: 17.46
+          frequency: 17.45
         }
         {
           number: 12
           count: 340
-          frequency: 17.99
+          frequency: 17.98
         }
         {
           number: 13
           count: 332
-          frequency: 17.57
+          frequency: 17.56
         }
         {
           number: 14
-          count: 391
-          frequency: 20.69
+          count: 392
+          frequency: 20.73
         }
         {
           number: 15
           count: 348
-          frequency: 18.41
+          frequency: 18.4
         }
         {
           number: 16
           count: 326
-          frequency: 17.25
+          frequency: 17.24
         }
         {
           number: 17
           count: 365
-          frequency: 19.31
+          frequency: 19.3
         }
         {
           number: 18
           count: 350
-          frequency: 18.52
+          frequency: 18.51
         }
         {
           number: 19
           count: 363
-          frequency: 19.21
+          frequency: 19.2
         }
         {
           number: 20
           count: 359
-          frequency: 18.99
+          frequency: 18.98
         }
         {
           number: 21
@@ -134,72 +134,72 @@
         {
           number: 22
           count: 385
-          frequency: 20.37
+          frequency: 20.36
         }
         {
           number: 23
           count: 330
-          frequency: 17.46
+          frequency: 17.45
         }
         {
           number: 24
-          count: 321
-          frequency: 16.98
+          count: 322
+          frequency: 17.03
         }
         {
           number: 25
           count: 332
-          frequency: 17.57
+          frequency: 17.56
         }
         {
           number: 26
           count: 357
-          frequency: 18.89
+          frequency: 18.88
         }
         {
           number: 27
           count: 361
-          frequency: 19.1
+          frequency: 19.09
         }
         {
           number: 28
           count: 306
-          frequency: 16.19
+          frequency: 16.18
         }
         {
           number: 29
           count: 318
-          frequency: 16.83
+          frequency: 16.82
         }
         {
           number: 30
           count: 315
-          frequency: 16.67
+          frequency: 16.66
         }
         {
           number: 31
           count: 319
-          frequency: 16.88
+          frequency: 16.87
         }
         {
           number: 32
           count: 352
-          frequency: 18.62
+          frequency: 18.61
         }
         {
           number: 33
-          count: 320
-          frequency: 16.93
+          count: 321
+          frequency: 16.98
         }
       ]
       "// 统计摘要": 频率分析的关键指标
       summary:
       {
         highest_freq_number: 14
-        highest_freq_count: 391
+        highest_freq_count: 392
         lowest_freq_number: 21
         lowest_freq_count: 304
-        average_frequency: 343.64
+        average_frequency: 343.82
       }
     }
     blue_balls:
@@ -211,7 +211,7 @@
         {
           number: 1
           count: 136
-          frequency: 7.2
+          frequency: 7.19
         }
         {
           number: 2
@@ -236,7 +236,7 @@
         {
           number: 6
           count: 123
-          frequency: 6.51
+          frequency: 6.5
         }
         {
           number: 7
@@ -261,12 +261,12 @@
         {
           number: 11
           count: 116
-          frequency: 6.14
+          frequency: 6.13
         }
         {
           number: 12
           count: 126
-          frequency: 6.67
+          frequency: 6.66
         }
         {
           number: 13
@@ -280,8 +280,8 @@
         }
         {
           number: 15
-          count: 132
-          frequency: 6.98
+          count: 133
+          frequency: 7.03
         }
         {
           number: 16
@@ -296,7 +296,7 @@
         highest_freq_count: 136
         lowest_freq_number: 13
         lowest_freq_count: 101
-        average_frequency: 118.12
+        average_frequency: 118.19
       }
     }
   }
@@ -311,15 +311,15 @@
       "// 图表类型": 饼图或柱状图展示各种奇偶组合的出现频率
       data:
       {
+        1奇5偶: 115
         4奇2偶: 471
         2奇4偶: 453
         3奇3偶: 669
-        1奇5偶: 114
         5奇1偶: 143
         6奇0偶: 21
         0奇6偶: 19
       }
-      total_periods: 1890
+      total_periods: 1891
     }
     sum_distribution:
     {
@@ -328,8 +328,8 @@
       "// 分析意义": 帮助识别号码组合的和值趋势
       data:
       {
+        90-99: 332
         110-119: 305
-        90-99: 331
         60-69: 83
         130-139: 97
         70-79: 165
@@ -345,7 +345,7 @@
         20-29: 1
         160-169: 2
       }
-      total_periods: 1890
+      total_periods: 1891
     }
     span_distribution:
     {
@@ -354,14 +354,14 @@
       "// 分析意义": 反映号码选择的分散程度
       data:
       {
+        25-29: 716
         15-19: 268
-        25-29: 715
         20-24: 566
         10-14: 71
         30-34: 266
         5-9: 4
       }
-      total_periods: 1890
+      total_periods: 1891
     }
   }
   trend_analysis:
@@ -372,6 +372,20 @@
     "// 分析周期": 最近10期开奖数据
     recent_draws:
     [
+      {
+        period: "2025084"
+        date: 2025-07-24
+        red_balls:
+        [
+          6
+          8
+          10
+          14
+          24
+          33
+        ]
+        blue_ball: 15
+      }
       {
         period: "2025083"
         date: 2025-07-22
@@ -497,20 +511,6 @@
           21
         ]
         blue_ball: 15
-      }
-      {
-        period: "2025074"
-        date: 2025-07-01
-        red_balls:
-        [
-          3
-          4
-          12
-          20
-          32
-          33
-        ]
-        blue_ball: 13
       }
     ]
     hot_numbers:
